@@ -141,7 +141,7 @@ class DisplayAgent(Leif):
             ( hn.squeeze(0).clone().detach().numpy(),
               cn.squeeze(0).clone().detach().numpy() ))
 
-        return action, probs_softmaxed
+        return action, probs_softmaxed, val
 
 
 class Stoner(agents.BaseAgent):
