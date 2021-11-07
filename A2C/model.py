@@ -1,4 +1,3 @@
-import pommerman
 from pommerman import agents
 import sys
 import gym
@@ -105,6 +104,45 @@ class Leif(agents.BaseAgent):
         self.hidden.insert(0, self.model.init_rnn())
 
         return self.states, self.actions, self.hidden, self.probs, self.values
+
+
+# Agent which returns the probability distribution of the actions given the state
+class DisplayAgent(Leif):
+
+    def __init__(self, model):
+        super().__init__(model)
+
+    def act(self, obs, action_space):
+        obs = self.translate_obs(obs)
+
+        last_hn, last_cn = self.hidden[-1][0], self.hidden[-1][1]
+        obs = torch.from_numpy(obs).float().to(self.model.device)
+
+        with torch.no_grad():
+            self.model.eval()
+            last_hn, last_cn = torch.tensor(last_hn).unsqueeze(0), torch.tensor(last_cn).unsqueeze(0)
+            probs, val, hn, cn = self.model(obs.unsqueeze(0), last_hn, last_cn, self.debug)
+
+            if self.debug:
+                print("hn mean:", hn.mean(), "hn std:", hn.std(), "cn mean:", cn.mean(), "cn std:", cn.std())
+
+            probs_softmaxed = F.softmax(probs, dim=-1)
+
+            if self.stochastic:
+                action = Categorical(probs_softmaxed).sample().item()
+            else:
+                action = probs_softmaxed.max(1, keepdim=True)[1].item()
+
+        self.actions.append(action)
+        self.states.append(obs.squeeze(0).numpy())
+        self.probs.append(probs.detach().numpy())
+        self.values.append(val.detach().item())
+        self.hidden.append(
+            ( hn.squeeze(0).clone().detach().numpy(),
+              cn.squeeze(0).clone().detach().numpy() ))
+
+        return action, probs_softmaxed
+
 
 class Stoner(agents.BaseAgent):
         def __init__(self): super(Stoner, self).__init__()
