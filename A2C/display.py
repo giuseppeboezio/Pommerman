@@ -1,11 +1,12 @@
 from main import World
 import torch
 from matplotlib import pyplot as plt
+import time
 
 
 def plot_step(dis, val, act, title):
-    names = act + "VALUE"
-    values = dis + val
+    names = act + ["VALUE"]
+    values = dis + [val]
     plt.title(title)
     plt.bar(names, values)
     plt.show()
@@ -31,5 +32,7 @@ def main():
             print("Step {}".format(j))
             action, distribution, val = env.act(state)
             env.render()
+            time.sleep(0.2)
             plot_step(distribution, val, actions, title)
             state, reward, done, info = env.step(action)
+main()

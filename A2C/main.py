@@ -211,5 +211,7 @@ def readme(world):
     print("Start the training. Wait for 300 episodes (this will generate weights file). Run evaluate. See running results.")
     return None
 
-entrypoint = next(iter(sys.argv[1:]), "readme")
-locals()[entrypoint](World())
+
+if __name__ == "__main__":
+    entrypoint = next(iter(sys.argv[1:]), "readme")
+    locals()[entrypoint](World())
