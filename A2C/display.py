@@ -1,4 +1,6 @@
 from main import World
+from model import DisplayAgent
+from model import A2CNet
 import torch
 from matplotlib import pyplot as plt
 import time
@@ -21,30 +23,35 @@ def main():
     num_episodes = 10
     name_acts = ["STOP", "UP", "DOWN", "LEFT", "RIGHT", "BOMB"]
     title = "P(a|s) and V(s)"
-    world = World(display=True)
+    world = World()
     env = world.env
     model = world.model
     model.load_state_dict(torch.load("convrnn-s.weights", map_location='cpu'))
-    ded, state, _ = False, world.env.reset(), world.leif.clear()
-    # our player is the first agent
-    obs = state[0]
+    display_agent = DisplayAgent(model)
+    display_agent.clear()
+    ded, state, _ = False, env.reset(), world.leif.clear()
 
     for i in range(num_episodes):
         print("Episode {}".format(i+1))
         done = False
         j = 0
         while not done:
-            j += 1
             print("Step {}".format(j))
-            action, distribution, val = world.leif.act(obs, spaces.Discrete(len(name_acts)))
+            actions = env.act(state)
+
+            # showing behaviour of our agent (first agent in the list)
+            obs = state[0]
+            action, distribution, val = display_agent.act(obs, spaces.Discrete(len(name_acts)))
 
             # preprocessing of distribution and val
             dist = distribution.tolist()[:][0]
             value = val.tolist()[0][0]
-            print(value)
 
             env.render()
-            time.sleep(2)
+            time.sleep(0.5)
             plot_step(dist, value, name_acts, title)
-            state, reward, done, info = env.step(action)
+            state, reward, done, info = env.step(actions)
+            j += 1
+
+
 main()

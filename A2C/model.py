@@ -17,6 +17,7 @@ from torch.distributions import Categorical
 # import matplotlib.pyplot as plt
 # plt.ion()
 
+
 class Leif(agents.BaseAgent):
     def __init__(self, model):
         super(Leif, self).__init__()

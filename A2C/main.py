@@ -18,15 +18,12 @@ batch = []
 
 
 class World():
-    def __init__(self, init_gmodel = True, display = False):
+    def __init__(self, init_gmodel = True):
         if init_gmodel: 
             self.gmodel = A2CNet(gpu = True) # Global model
 
         self.model = A2CNet(gpu = False)     # Agent (local) model
-        if not display:
-            self.leif = Leif(self.model)
-        else:
-            self.leif = DisplayAgent(self.model)
+        self.leif = Leif(self.model)
         self.stoner = Stoner()
 
         self.agent_list = [
