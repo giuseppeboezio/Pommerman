@@ -8,8 +8,11 @@ from gym import spaces
 def plot_step(dis, val, act, title):
     names = act
     values = dis
-    plt.title(title)
+    plt.subplot(211)
+    plt.title("P(a|s)")
     plt.bar(names, values)
+    plt.subplot(212)
+    plt.plot(["V(s)"], [val], 'r+')
     plt.show()
 
 
@@ -36,8 +39,9 @@ def main():
             action, distribution, val = world.leif.act(obs, spaces.Discrete(len(name_acts)))
 
             # preprocessing of distribution and val
-            dist = distribution.tolist()
+            dist = distribution.tolist()[:][0]
             value = val.tolist()[0][0]
+            print(value)
 
             env.render()
             time.sleep(2)
