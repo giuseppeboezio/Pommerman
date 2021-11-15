@@ -134,7 +134,7 @@ def train(world):
     model, gmodel = world.model, world.gmodel
     leif, env     = world.leif, world.env
     
-    if False and os.path.isfile("convrnn-s.weights"):
+    if os.path.isfile("convrnn-s.weights"):
         model.load_state_dict(torch.load("convrnn-s.weights", map_location='cpu'))
         gmodel.load_state_dict(torch.load("convrnn-s.weights", map_location='cpu'))
     

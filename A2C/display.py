@@ -20,7 +20,7 @@ def plot_step(dis, val, act):
 def main():
     # number of episodes that I want to visualize
     num_episodes = 10
-    name_acts = ["STOP", "UP", "DOWN", "LEFT", "RIGHT", "BOMB"]
+    name_acts = ["Stop", "Up", "Down", "Left", "Right", "Bomb"]
     world = World()
     env = world.env
     model = world.model
@@ -31,6 +31,7 @@ def main():
 
         display_agent.clear()
         ded, state, _ = False, env.reset(), world.leif.clear()
+        print(state[0]['blast_strength'])
         print("Episode {}".format(i+1))
         done = False
         j = 0

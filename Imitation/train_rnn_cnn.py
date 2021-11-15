@@ -304,7 +304,7 @@ if __name__ == '__main__':
                                         val_losses[-1],
                                         val_accs[-1]))
 
-    torch.save(model.state_dict(), './4xCNNx_2xRNN.pth')
+    torch.save(model.state_dict(), '4xCNNx_2xRNN.pth')
 
     plt.figure()
     epoch_1 = np.linspace(0,len(val_losses)-1,len(train_losses))

@@ -3,7 +3,7 @@ __pycache__/
 *$py.class
 convrnn-s.weights
 training.txt
-4xCNNx_2xRNN.pth
+Imitation/4xCNNx_2xRNN.pth
 simpleAgentActions_sequence_rawObs.txt
 simpleAgentStates_obs.txt
 simpleAgentStates_raw.txt
