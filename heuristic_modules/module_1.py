@@ -1,6 +1,6 @@
 import numpy as np
 from playground.pommerman import constants
-
+from queue import PriorityQueue
 
 def get_feasible_pos(state):
     """Positions of the board where the agent can put a bomb"""
@@ -12,6 +12,7 @@ def get_feasible_pos(state):
     return mask
 
 
+# TODO test this function
 def destroyed_walls(state, position):
     """Number of walls that can be destroyed putting a bomb in position"""
     count = 0
@@ -85,9 +86,72 @@ def get_destroyed_boxes(state):
     return bombs
 
 
-def get_distances(state):
+# dijkstra's algorithm for grids
+def dijkstra(board, start, end):
+
+
     pass
 
+
+class Node:
+
+    def __init__(self, position):
+        self.position = position
+        self.neighbours = []
+        # distance from the root node, -1 means infinity
+        self.distance = -1
+        self.parent = None
+
+    def add_neighbour(self, neighbour):
+        self.neighbours.append(neighbour)
+
+    def set_parent(self, parent):
+        self.parent = parent
+
+    def get_unvisited_neighbours(self):
+
+        pass
+
+
+# graph of the board
+class Board:
+
+    def __init__(self, board):
+
+        self.nodes = []
+
+        for i in range(constants.BOARD_SIZE):
+            for j in range(len(constants.BOARD_SIZE)):
+
+                # check whether the position corresponds to a passage or to our agent
+                if board[i,j] == 0 or board[i,j] == 10:
+
+                    neighbours = [(i+1, j), (i-1, j), (i, j+1), (i, j-1)]
+
+                    # remove positions outside the board or for which there is no passage
+                    for elem in neighbours:
+                        if elem[0] < 0 or elem[1] < 0 or board[elem[0],elem[1]] != 0:
+                            neighbours.remove(elem)
+
+                    node = Node((i,j))
+
+                    # adding neighbours of the node
+                    for elem in neighbours:
+                        node.add_neighbour(Node((elem[0],elem[1])))
+
+                    self.nodes.append(node)
+
+    def get_nodes(self):
+        return self.nodes
+
+
+def get_distances(state):
+
+    obs = state['board']
+    board_graph = Board(obs)
+
+
+    pass
 
 def combine_masks(bombs, distances, alpha=1, beta=0.5):
     return bombs * alpha - distances * beta
