@@ -43,11 +43,10 @@ def main():
             print("Board")
             print(obs['board'])
 
-            des_walls = m1.get_destroyed_boxes(obs)
+            distances = m1.get_distances(obs)
 
-
-            print("Destroyed walls")
-            print(des_walls)
+            print("Distances")
+            print(distances)
 
 
             # action, distribution, val = display_agent.act(obs, spaces.Discrete(len(name_acts)))

@@ -119,7 +119,7 @@ class Node:
     def __init__(self, position):
         self.position = position
         self.neighbours = []
-        # distance from the root node, 1000 means infinity
+        # distance from the root node, infinity if they are not connected
         self.distance = np.inf
         self.discovered = False
 
@@ -143,7 +143,7 @@ class Node:
 
     def get_unvisited_neighbours(self):
 
-        unvisited = [node for node in self.neighbours if not self.is_discovered()]
+        unvisited = [node for node in self.neighbours if not node.is_discovered()]
         return unvisited
 
 
@@ -162,8 +162,9 @@ class Board:
                 if board[i,j] == 0 or board[i,j] == 10:
                     nodes_dict[(i,j)] = Node((i,j))
 
+        # creation of nodes and add to each one its neighbours
         for i in range(constants.BOARD_SIZE):
-            for j in range(len(constants.BOARD_SIZE)):
+            for j in range(constants.BOARD_SIZE):
 
                 # check whether the position corresponds to a passage or to our agent
                 if board[i,j] == 0 or board[i,j] == 10:
@@ -171,11 +172,14 @@ class Board:
                     neighbours = [(i+1, j), (i-1, j), (i, j+1), (i, j-1)]
 
                     # remove positions outside the board or for which there is no passage
+                    valid_neighbours = []
                     for elem in neighbours:
-                        if elem[0] < 0 or elem[1] < 0 or board[elem[0],elem[1]] != 0:
-                            neighbours.remove(elem)
 
-                    for elem in neighbours:
+                        if elem[0] >= 0 and elem[1] >= 0 and elem[0] < constants.BOARD_SIZE and \
+                                elem[1] < constants.BOARD_SIZE and board[elem[0],elem[1]] == 0:
+                            valid_neighbours.append(elem)
+
+                    for elem in valid_neighbours:
                         nodes_dict[(i,j)].add_neighbour(nodes_dict[(elem[0],elem[1])])
 
                     self.nodes.append(nodes_dict[(i,j)])
