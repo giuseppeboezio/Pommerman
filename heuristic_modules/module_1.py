@@ -1,6 +1,7 @@
 import numpy as np
 from playground.pommerman import constants
 
+
 def get_feasible_pos(state):
     """Positions of the board where the agent can put a bomb"""
     mask = np.zeros((constants.BOARD_SIZE, constants.BOARD_SIZE))
@@ -14,7 +15,6 @@ def get_feasible_pos(state):
 # TODO test this function
 def destroyed_walls(state, position):
     """Number of walls that can be destroyed putting a bomb in position"""
-    count = 0
     positions = []
     blast_strength = state['blast_strength'] - 1
     # list of positions to check
@@ -25,7 +25,7 @@ def destroyed_walls(state, position):
     positions = positions + left + right + up + down
     # Removing positions outside the board
     for pos in positions:
-        if pos[0] < 0 or pos[1] < 0:
+        if pos[0] < 0 or pos[1] < 0 or pos[0] > constants.BOARD_SIZE - 1 or pos[1] > constants.BOARD_SIZE - 1:
             positions.remove(pos)
     # positions where there are destructible walls
     board = state['board']
