@@ -1,7 +1,11 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
+from torch.utils.data import Dataset
 from pommerman import constants
+import pandas as pd
+import os
+from torchvision.io import read_image
 
 
 class DiscriminatorNet(nn.Module):
@@ -64,3 +68,23 @@ def test_loop(dataloader, model, loss):
     correct /= size
     print(f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
+
+class BoardDataset(Dataset):
+    def __init__(self, annotations_file, img_dir, transform=None, target_transform=None):
+        self.img_labels = pd.read_csv(annotations_file)
+        self.img_dir = img_dir
+        self.transform = transform
+        self.target_transform = target_transform
+
+    def __len__(self):
+        return len(self.img_labels)
+
+    def __getitem__(self, idx):
+        img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0])
+        image = read_image(img_path)
+        label = self.img_labels.iloc[idx, 1]
+        if self.transform:
+            image = self.transform(image)
+        if self.target_transform:
+            label = self.target_transform(label)
+        return image, label
