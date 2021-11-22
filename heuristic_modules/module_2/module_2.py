@@ -1,13 +1,6 @@
 import numpy as np
-from pommerman import constants
-import torch
-from torch.nn import BCELoss
-from torch.optim import Adam
-from torch.utils.data import DataLoader
-from torchvision.transforms import ToTensor
-from heuristic_modules.network import BoardDataset
-from heuristic_modules.network import DiscriminatorNet
-from heuristic_modules.network import train_loop, test_loop
+from pommerman import constants, make, agents
+from pommerman.constants import Item
 
 
 def preprocess_state_avoidance(state, position):
@@ -29,34 +22,75 @@ def preprocess_state_avoidance(state, position):
             # marked position
             if i == position[0] and j == position[1]:
                 input_state[i, j] = 14
-    torch_state = torch.from_numpy(input_state)
-    return torch_state
+    return input_state
 
 
-def train_and_test_nn_avoidance(model_path):
+def get_object_positions(state, id_object):
+    """Return positions (tuple) of the objects with id_object"""
 
-    # loading datasets
-    training_data = BoardDataset("boards_train.csv","train", transform=ToTensor())
-    test_data = BoardDataset("boards_test.csv", "test", transform=ToTensor())
-
-    # creation of dataloader
-    train_dataloader = DataLoader(training_data, batch_size=64, shuffle=True)
-    test_dataloader = DataLoader(test_data, batch_size=64, shuffle=True)
-
-    model = DiscriminatorNet()
-
-    loss = BCELoss()
-    optimizer = Adam(model.parameters(), lr=0.07)
-
-    epochs = 10
-    for t in range(epochs):
-        print(f"Epoch {t + 1}\n-------------------------------")
-        train_loop(train_dataloader, model, loss, optimizer)
-        test_loop(test_dataloader, model, loss)
-    print("Done!")
-
-    # saving the model
-    torch.save(model.state_dict(), model_path)
+    positions = []
+    for i in range(constants.BOARD_SIZE):
+        for j in range(constants.BOARD_SIZE):
+            # there is a bomb in position (i,j)
+            if state['board'] == id_object:
+                positions.append((i,j))
+    return positions
 
 
+def collect_data(num):
+    """Create dataset to use for the NN
+    num is the number of samples in each class"""
+
+    config = "PommeFFACompetition-v0"
+    game_state_file = None
+
+    my_agents = [agents.RandomAgent(), agents.SimpleAgent(), agents.SimpleAgent(), agents.SimpleAgent()]
+
+    env = make(config, my_agents, game_state_file)
+
+    # number of data collected for each class
+    num_pos = 0
+    num_neg = 0
+    pos_dataset = []
+    neg_dataset = []
+
+    state_history = []
+
+    # collecting positive samples
+    while num_pos < num:
+
+        state = env.reset
+        # flag for episode termination
+        done = False
+
+        while not done:
+            # bomb positions
+            last_bomb_positions = get_object_positions(state[0], Item.Bomb)
+            last_agent_position = get_object_positions(state[0], Item.Agent0)
+            # action of each agent
+            agent_actions = env.act(state)
+            # optional rending
+            env.render()
+            # new state after the actions
+            state, reward, done, _ = env.step(agent_actions)
+            cur_bomb_positions = get_object_positions(state[0], Item.Bomb)
+            cur_agent_position = get_object_positions(state[0], Item.Agent0)
+
+            # my agent has been killed
+            if not cur_agent_position:
+
+                killing_bomb = set(last_bomb_positions) - set(cur_bomb_positions)
+                for elem in killing_bomb:
+                    k_bomb_pos = elem
+                # now I have the position of the agent in last_agent_position and the position of the bomb
+                # in k_bomb_pos
+
+
+
+
+
+
+
+
+    pass
 

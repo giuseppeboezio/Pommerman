@@ -1,10 +1,15 @@
+from pommerman import constants
+import pandas as pd
+import os
+
 import torch
 from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset
-from pommerman import constants
-import pandas as pd
-import os
+from torch.nn import BCELoss
+from torch.optim import Adam
+from torch.utils.data import DataLoader
+from torchvision.transforms import ToTensor
 from torchvision.io import read_image
 
 
@@ -88,3 +93,29 @@ class BoardDataset(Dataset):
         if self.target_transform:
             label = self.target_transform(label)
         return image, label
+
+
+def train_and_test(csv_train, csv_test, dir_train, dir_test, model_path):
+
+    # loading datasets
+    training_data = BoardDataset(csv_train, dir_train, transform=ToTensor())
+    test_data = BoardDataset(csv_test, dir_test, transform=ToTensor())
+
+    # creation of dataloader
+    train_dataloader = DataLoader(training_data, batch_size=64, shuffle=True)
+    test_dataloader = DataLoader(test_data, batch_size=64, shuffle=True)
+
+    model = DiscriminatorNet()
+
+    loss = BCELoss()
+    optimizer = Adam(model.parameters(), lr=0.07)
+
+    epochs = 10
+    for t in range(epochs):
+        print(f"Epoch {t + 1}\n-------------------------------")
+        train_loop(train_dataloader, model, loss, optimizer)
+        test_loop(test_dataloader, model, loss)
+    print("Done!")
+
+    # saving the model
+    torch.save(model.state_dict(), model_path)
