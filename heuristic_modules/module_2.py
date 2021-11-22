@@ -1,8 +1,7 @@
 import numpy as np
 from pommerman import constants
 import torch
-from torch.nn import BCELoss
-from torch.optim import Adam
+
 import network
 
 
@@ -29,13 +28,6 @@ def preprocess_state_avoidance(state, position):
     return torch_state
 
 
-def train():
-
-    model = network.DiscriminatorNet()
-    # setting the optimizer
-    optimizer = Adam(model.parameters(), lr=0.07)
-    # setting loss function
-    criterion = BCELoss()
 
 
 
