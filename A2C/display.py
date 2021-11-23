@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 import time
 from heuristic_modules import module_1 as m1
 
+
 def plot_step(dis, val, act):
     names = act
     values = dis
