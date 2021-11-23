@@ -1,9 +1,11 @@
 import numpy as np
 from pommerman import constants, make, agents
 from pommerman.constants import Item
+import random
+from sklearn.model_selection import train_test_split
 
 
-def preprocess_state_avoidance(state, position):
+def preprocess_state_avoidance(board, position):
     """Create the input for the NN
     position: tuple containing the position to evaluate
     passage: 0
@@ -12,7 +14,6 @@ def preprocess_state_avoidance(state, position):
     marked position: 14
     other objects: 15"""
 
-    board = state['board']
     input_state = np.array(board)
     for i in range(constants.BOARD_SIZE):
         for j in range(constants.BOARD_SIZE):
@@ -37,6 +38,22 @@ def get_object_positions(state, id_object):
     return positions
 
 
+def get_samples(state, position):
+
+    samples = []
+    board = state['board']
+    for i in range(constants.BOARD_SIZE):
+        for j in range(constants.BOARD_SIZE):
+            # clean the position where the agent can die and move it to any feasible position
+            if board[i,j] == Item.Passage:
+                board[i,j] = Item.Agent0
+                board[position[0],position[1]] = Item.Passage
+                # preprocess the input for the NN
+                input_board = preprocess_state_avoidance(board, position)
+                samples.append(input_board)
+    return samples
+
+
 def collect_data(num):
     """Create dataset to use for the NN
     num is the number of samples in each class"""
@@ -57,6 +74,41 @@ def collect_data(num):
     state_history = []
 
     # collecting positive samples
+    # In this case if my agent dies, I consider the last position (where the agent should not be) and
+    # produce samples considering all positions where to put the agent except for the one where it could be killed
+    print("Collecting negative samples\n----------------------------------------")
+
+    while num_neg < num:
+
+        state = env.reset
+        # flag for episode termination
+        done = False
+
+        while not done:
+            last_state = state[0]
+            last_agent_position = get_object_positions(last_state, Item.Agent0)
+            # action of each agent
+            agent_actions = env.act(state)
+            # optional rending
+            env.render()
+            # new state after the actions
+            state, reward, done, _ = env.step(agent_actions)
+            new_state = state[0]
+            cur_agent_position = get_object_positions(new_state, Item.Agent0)
+
+            # my agent has been killed
+            if not cur_agent_position:
+
+                samples = get_samples(last_state, last_agent_position[0])
+                neg_dataset += samples
+                num_neg += len(samples)
+
+                print(f"Number of negative collected samples: {num_neg} / {num} - {num_neg/num} %")
+
+                break
+
+    print("Collecting positive samples\n----------------------------------------")
+
     while num_pos < num:
 
         state = env.reset
@@ -64,33 +116,44 @@ def collect_data(num):
         done = False
 
         while not done:
-            # bomb positions
-            last_bomb_positions = get_object_positions(state[0], Item.Bomb)
-            last_agent_position = get_object_positions(state[0], Item.Agent0)
+            last_state = state[0]
+            last_agent_position = get_object_positions(last_state, Item.Agent0)
             # action of each agent
             agent_actions = env.act(state)
             # optional rending
             env.render()
             # new state after the actions
             state, reward, done, _ = env.step(agent_actions)
-            cur_bomb_positions = get_object_positions(state[0], Item.Bomb)
-            cur_agent_position = get_object_positions(state[0], Item.Agent0)
+            new_state = state[0]
+            cur_agent_position = get_object_positions(new_state, Item.Agent0)
 
-            # my agent has been killed
-            if not cur_agent_position:
+            # my agent has not been killed
+            if cur_agent_position:
 
-                killing_bomb = set(last_bomb_positions) - set(cur_bomb_positions)
-                for elem in killing_bomb:
-                    k_bomb_pos = elem
-                # now I have the position of the agent in last_agent_position and the position of the bomb
-                # in k_bomb_pos
+                samples = get_samples(last_state, last_agent_position[0])
+                pos_dataset += samples
+                num_pos += len(samples)
+
+                print(f"Number of positive collected samples: {num_pos} / {num} - {num_pos/num} %")
+
+                break
+
+    # creating the dataset
+    neg_labels = np.full(num, 0)
+    pos_labels = np.full(num, 1)
+    labels = np.concatenate((neg_labels,pos_labels))
+
+    input_list = neg_dataset + pos_dataset
+
+    return input_list, labels
 
 
+def main():
+
+    # number of samples to collect
+    num = 2000
+
+    input_list, labels = collect_data(num)
 
 
-
-
-
-
-    pass
-
+main()
