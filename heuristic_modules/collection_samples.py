@@ -1,5 +1,6 @@
 from PIL import Image
 import pandas as pd
+import os
 
 
 def convert_to_images(X, y, pth_images, pth_annotations):
@@ -8,7 +9,7 @@ def convert_to_images(X, y, pth_images, pth_annotations):
 
         # save the image
         im = Image.fromarray(value)
-        im.save(f"{pth_images}/{counter}.png")
+        im.save(os.path.join(pth_images, f'{counter}.png'))
 
     names = [f"{i}.png" for i in range(len(y))]
 

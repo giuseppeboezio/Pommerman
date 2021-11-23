@@ -106,8 +106,8 @@ def collect_data(num):
             agent_actions = env.act(state)
 
             # optional rending
-            env.render()
-            time.sleep(0.5)
+            # env.render()
+            # time.sleep(0.5)
             # new state after the actions
             state, reward, done, info = env.step(agent_actions)
             new_state = state[0]
@@ -145,8 +145,8 @@ def collect_data(num):
             # action of each agent
             agent_actions = env.act(state)
             # optional rending
-            env.render()
-            time.sleep(0.5)
+            # env.render()
+            # time.sleep(0.5)
             # new state after the actions
             state, reward, done, _ = env.step(agent_actions)
             new_state = state[0]
@@ -162,6 +162,10 @@ def collect_data(num):
 
                 break
 
+    add_sample_num = num_pos % num
+    pos_dataset = pos_dataset[:-add_sample_num]
+    print(f"Number of positive samples: {len(neg_dataset)}")
+
     # creating the dataset
     neg_labels = np.full(num, 0)
     pos_labels = np.full(num, 1)
@@ -174,7 +178,7 @@ def collect_data(num):
 
 def main():
 
-    # number of samples to collect
+    # number of samples to collect for each class
     num = 2000
 
     input_list, labels = collect_data(num)
@@ -183,7 +187,7 @@ def main():
     X_train, X_test, y_train, y_test = train_test_split(input_list, labels, test_size=0.33, random_state=42, stratify=labels)
 
     # convert boards into images
-    convert_to_images(X_train,y_train,"heuristic_modules/module_2/train", "heuristic_modules/module_2/train.csv")
-    convert_to_images(X_test, y_test, "heuristic_modules/module_2/test", "heuristic_modules/module_2/test.csv")
+    convert_to_images(X_train,y_train,"C:/Users/boezi/PycharmProjects/Pommerman/heuristic_modules/module_2/train", "C:/Users/boezi/PycharmProjects/Pommerman/heuristic_modules/module_2/train.csv")
+    convert_to_images(X_test, y_test, "C:/Users/boezi/PycharmProjects/Pommerman/heuristic_modules/module_2/test", "C:/Users/boezi/PycharmProjects/Pommerman/heuristic_modules/module_2/test.csv")
 
 main()
