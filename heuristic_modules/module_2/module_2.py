@@ -71,8 +71,6 @@ def collect_data(num):
     pos_dataset = []
     neg_dataset = []
 
-    state_history = []
-
     # collecting positive samples
     # In this case if my agent dies, I consider the last position (where the agent should not be) and
     # produce samples considering all positions where to put the agent except for the one where it could be killed
