@@ -2,6 +2,7 @@ import numpy as np
 from pommerman import constants, make, agents
 from pommerman.constants import Item
 from heuristic_modules.collection_samples import convert_to_images
+from heuristic_modules.network import train_and_test
 from sklearn.model_selection import train_test_split
 import time
 
@@ -190,4 +191,16 @@ def main():
     convert_to_images(X_train,y_train,"C:/Users/boezi/PycharmProjects/Pommerman/heuristic_modules/module_2/train", "C:/Users/boezi/PycharmProjects/Pommerman/heuristic_modules/module_2/train.csv")
     convert_to_images(X_test, y_test, "C:/Users/boezi/PycharmProjects/Pommerman/heuristic_modules/module_2/test", "C:/Users/boezi/PycharmProjects/Pommerman/heuristic_modules/module_2/test.csv")
 
-main()
+
+def launch_training_and_test():
+
+    train_csv = "train.csv"
+    test_csv = "test.csv"
+    dir_train = "train"
+    dir_test = "test"
+    model_path = "model_weights.pth"
+
+    train_and_test(train_csv, test_csv, dir_train, dir_test, model_path)
+
+
+launch_training_and_test()

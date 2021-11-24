@@ -15,4 +15,4 @@ def convert_to_images(X, y, pth_images, pth_annotations):
 
     # creation of the dataframe
     df = pd.DataFrame({"name": names, "label": y})
-    df.to_csv(pth_annotations)
+    df.to_csv(pth_annotations, index=False)

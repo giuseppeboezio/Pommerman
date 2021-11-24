@@ -35,13 +35,13 @@ class DiscriminatorNet(nn.Module):
         return x
 
 
-def train_loop(dataloader, model, optimizer, loss):
+def train_loop(dataloader, model, optimizer, loss_fun):
 
     size = len(dataloader.dataset)
     for batch, (X, y) in enumerate(dataloader):
         # Compute prediction and loss
         pred = model(X)
-        loss = loss(pred, y)
+        loss = loss_fun(pred, y)
 
         # Backpropagation
         optimizer.zero_grad()
@@ -53,7 +53,7 @@ def train_loop(dataloader, model, optimizer, loss):
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
 
-def test_loop(dataloader, model, loss):
+def test_loop(dataloader, model, loss_fun):
 
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
@@ -62,7 +62,7 @@ def test_loop(dataloader, model, loss):
     with torch.no_grad():
         for X, y in dataloader:
             pred = model(X)
-            test_loss += loss(pred, y).item()
+            test_loss += loss_fun(pred, y).item()
             if pred > 0.5:
                 pred = 1
             else:
