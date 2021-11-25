@@ -14,12 +14,14 @@ from torchvision.io import read_image
 
 class DiscriminatorNet(nn.Module):
 
-    def __init__(self):
+    def __init__(self, num_channels):
         super(DiscriminatorNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 64, kernel_size=(3,3), padding=1)
-        self.conv2 = nn.Conv2d(64, 64, kernel_size=(3,3), padding=1)
-        self.conv3 = nn.Conv2d(64, 64, kernel_size=(3,3), padding=1)
-        self.linear = nn.Linear(constants.BOARD_SIZE * constants.BOARD_SIZE, 1)
+        self.conv1 = nn.Conv2d(1, num_channels, kernel_size=(3,3), padding=1)
+        self.conv2 = nn.Conv2d(num_channels, num_channels, kernel_size=(3,3), padding=1)
+        self.conv3 = nn.Conv2d(num_channels, num_channels, kernel_size=(3,3), padding=1)
+        flat_dimension = constants.BOARD_SIZE * constants.BOARD_SIZE * num_channels
+        self.linear1 = nn.Linear(flat_dimension, round(flat_dimension / 3))
+        self.linear2 = nn.Linear(645, 1)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -29,49 +31,11 @@ class DiscriminatorNet(nn.Module):
         x = self.conv3(x)
         x = F.relu(x)
         x = x.view(x.size(0), -1)
-        x = self.linear(x)
-        x = F.sigmoid(x)
+        x = self.linear1(x)
+        x = F.relu(x)
+        x = self.linear2(x)
+        x = torch.sigmoid(x)
         return x
-
-
-def train_loop(dataloader, model, optimizer, loss_fun):
-
-    size = len(dataloader.dataset)
-    for batch, (X, y) in enumerate(dataloader):
-
-        # Compute prediction and loss
-        pred = model(X)
-        loss = loss_fun(pred, y)
-
-        # Backpropagation
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        if batch % 100 == 0:
-            loss, current = loss.item(), batch * len(X)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
-
-
-def test_loop(dataloader, model, loss_fun):
-
-    size = len(dataloader.dataset)
-    num_batches = len(dataloader)
-    test_loss, correct = 0, 0
-
-    with torch.no_grad():
-        for X, y in dataloader:
-            pred = model(X)
-            test_loss += loss_fun(pred, y).item()
-            if pred > 0.5:
-                pred = 1
-            else:
-                pred = 0
-            correct += (pred == y).type(torch.float).sum().item()
-
-    test_loss /= num_batches
-    correct /= size
-    print(f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
 
 class BoardDataset(Dataset):
@@ -96,6 +60,65 @@ class BoardDataset(Dataset):
         return image, label
 
 
+def train_loop(dataloader, model, optimizer, loss_fun):
+
+    size = len(dataloader.dataset)
+    for batch, (X, y) in enumerate(dataloader):
+
+        # Compute prediction and loss
+        pred = model(X)
+
+        # reshape of y
+        y = torch.reshape(y, (len(y), 1))
+        y = y.float()
+
+        loss = loss_fun(pred, y)
+
+        # Backpropagation
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        loss, current = loss.item(), batch * len(X)
+        print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+
+
+def test_loop(dataloader, model, loss_fun):
+
+    size = len(dataloader.dataset)
+    num_batches = len(dataloader)
+    test_loss, correct = 0, 0
+
+    with torch.no_grad():
+        for X, y in dataloader:
+            pred = model(X)
+
+            # reshape of y
+            y = torch.reshape(y, (len(y), 1))
+            y = y.float()
+
+            test_loss += loss_fun(pred, y).item()
+
+            # conversion of probability to survive with binary classes values
+            pred_c = torch.zeros(pred.shape)
+
+            for i in range(pred.shape[0]):
+                for j in range(pred.shape[1]):
+                    if pred[i,j] > 0.5:
+                        pred_c[i,j] = 1
+                    else:
+                        pred_c[i,j] = 0
+
+            correct += (pred_c == y).type(torch.float).sum().item()
+
+    test_loss /= num_batches
+    correct /= size
+    print(f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+
+
+
+
+
 def train_and_test(csv_train, csv_test, dir_train, dir_test, model_path):
 
     # loading datasets
@@ -106,7 +129,8 @@ def train_and_test(csv_train, csv_test, dir_train, dir_test, model_path):
     train_dataloader = DataLoader(training_data, batch_size=64, shuffle=True)
     test_dataloader = DataLoader(test_data, batch_size=64, shuffle=True)
 
-    model = DiscriminatorNet()
+    num_channels = 16
+    model = DiscriminatorNet(num_channels)
 
     loss = BCELoss()
     optimizer = Adam(model.parameters(), lr=0.07)
@@ -114,7 +138,7 @@ def train_and_test(csv_train, csv_test, dir_train, dir_test, model_path):
     epochs = 100
     for t in range(epochs):
         print(f"Epoch {t + 1}\n-------------------------------")
-        train_loop(train_dataloader, model, loss, optimizer)
+        train_loop(train_dataloader, model, optimizer, loss)
         test_loop(test_dataloader, model, loss)
     print("Done!")
 
