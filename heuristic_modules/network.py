@@ -9,7 +9,6 @@ from torch.utils.data import Dataset
 from torch.nn import BCELoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader
-from torchvision.transforms import ToTensor
 from torchvision.io import read_image
 
 
@@ -39,6 +38,7 @@ def train_loop(dataloader, model, optimizer, loss_fun):
 
     size = len(dataloader.dataset)
     for batch, (X, y) in enumerate(dataloader):
+
         # Compute prediction and loss
         pred = model(X)
         loss = loss_fun(pred, y)
@@ -87,9 +87,10 @@ class BoardDataset(Dataset):
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0])
         image = read_image(img_path)
+        image = image.float()
         label = self.img_labels.iloc[idx, 1]
         if self.transform:
-            image = self.transform(image)
+            image = torch.from_numpy(image)
         if self.target_transform:
             label = self.target_transform(label)
         return image, label
@@ -98,8 +99,8 @@ class BoardDataset(Dataset):
 def train_and_test(csv_train, csv_test, dir_train, dir_test, model_path):
 
     # loading datasets
-    training_data = BoardDataset(csv_train, dir_train, transform=ToTensor())
-    test_data = BoardDataset(csv_test, dir_test, transform=ToTensor())
+    training_data = BoardDataset(csv_train, dir_train)
+    test_data = BoardDataset(csv_test, dir_test)
 
     # creation of dataloader
     train_dataloader = DataLoader(training_data, batch_size=64, shuffle=True)
@@ -110,7 +111,7 @@ def train_and_test(csv_train, csv_test, dir_train, dir_test, model_path):
     loss = BCELoss()
     optimizer = Adam(model.parameters(), lr=0.07)
 
-    epochs = 10
+    epochs = 100
     for t in range(epochs):
         print(f"Epoch {t + 1}\n-------------------------------")
         train_loop(train_dataloader, model, loss, optimizer)
