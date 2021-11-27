@@ -72,7 +72,7 @@ def collect_data(num):
     config = "PommeFFACompetition-v0"
     game_state_file = None
 
-    my_agents = [agents.RandomAgent(), agents.SimpleAgent(), agents.SimpleAgent(), agents.SimpleAgent()]
+    my_agents = [agents.SimpleAgent(), agents.SimpleAgent(), agents.SimpleAgent(), agents.SimpleAgent()]
 
     env = make(config, my_agents, game_state_file)
 
@@ -84,7 +84,7 @@ def collect_data(num):
 
     num_episode = 1
 
-    # collecting positive samples
+    # collecting negative samples
     # In this case if my agent dies, I consider the last position (where the agent should not be) and
     # produce samples considering all positions where to put the agent except for the one where it could be killed
     print("Collecting negative samples\n---------------------------")
@@ -98,7 +98,6 @@ def collect_data(num):
         done = False
 
         while not done:
-
 
             last_state = state[0]
             last_agent_position = last_state['position']
@@ -180,7 +179,7 @@ def collect_data(num):
 def main():
 
     # number of samples to collect for each class
-    num = 2000
+    num = 200000
 
     input_list, labels = collect_data(num)
 
@@ -204,3 +203,4 @@ def launch_training_and_test():
 
 
 launch_training_and_test()
+# main()

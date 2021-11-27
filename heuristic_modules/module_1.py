@@ -12,7 +12,6 @@ def get_feasible_pos(state):
     return mask
 
 
-# TODO test this function
 def destroyed_walls(state, position):
     """Number of walls that can be destroyed putting a bomb in position"""
     positions = []
@@ -118,6 +117,7 @@ class Node:
 
     def __init__(self, position):
         self.position = position
+        self.parent = None
         self.neighbours = []
         # distance from the root node, infinity if they are not connected
         self.distance = np.inf
@@ -131,6 +131,12 @@ class Node:
 
     def set_distance(self, distance):
         self.distance = distance
+
+    def set_parent(self, node):
+        self.parent = node
+
+    def get_parent(self):
+        return self.parent
 
     def set_discovered(self):
         self.discovered = True
@@ -210,7 +216,7 @@ def get_distances(state):
     # adding root to the queue
     priority_q.enqueue((0,start))
 
-    while not priority_q.is_empty() :
+    while not priority_q.is_empty():
         current_node = priority_q.dequeue()[1]
         current_node.set_discovered()
 
@@ -219,6 +225,7 @@ def get_distances(state):
 
             if min_distance != neighbour.get_distance():
                 neighbour.set_distance(min_distance)
+                neighbour.set_parent(current_node)
                 if priority_q.has(neighbour):
                     priority_q.change_priority(neighbour, min_distance)
 
@@ -232,7 +239,7 @@ def get_distances(state):
         pos = node.get_position()
         distances[pos[0],pos[1]] = node.get_distance()
 
-    return distances
+    return distances, nodes
 
 
 def combine_masks(bombs, distances, alpha=1, beta=0.5):

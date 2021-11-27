@@ -104,7 +104,7 @@ def test_loop(dataloader, model, loss_fun):
 
             for i in range(pred.shape[0]):
                 for j in range(pred.shape[1]):
-                    if pred[i,j] > 0.5:
+                    if pred[i,j] > 0.7:
                         pred_c[i,j] = 1
                     else:
                         pred_c[i,j] = 0
@@ -114,9 +114,6 @@ def test_loop(dataloader, model, loss_fun):
     test_loss /= num_batches
     correct /= size
     print(f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
-
-
-
 
 
 def train_and_test(csv_train, csv_test, dir_train, dir_test, model_path):
@@ -135,7 +132,7 @@ def train_and_test(csv_train, csv_test, dir_train, dir_test, model_path):
     loss = BCELoss()
     optimizer = Adam(model.parameters(), lr=0.07)
 
-    epochs = 100
+    epochs = 10
     for t in range(epochs):
         print(f"Epoch {t + 1}\n-------------------------------")
         train_loop(train_dataloader, model, optimizer, loss)
