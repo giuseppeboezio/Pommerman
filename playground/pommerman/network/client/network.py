@@ -7,7 +7,6 @@ thread-safe so feel free to run multiple network clients"""
 import pommerman
 import websocket
 from . import constants
-import rapidjson
 import threading
 import gzip
 import numpy

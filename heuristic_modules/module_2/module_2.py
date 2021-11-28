@@ -202,5 +202,6 @@ def launch_training_and_test():
     train_and_test(train_csv, test_csv, dir_train, dir_test, model_path)
 
 
-launch_training_and_test()
-# main()
+if __name__ == '__main__':
+    launch_training_and_test()
+    # main()

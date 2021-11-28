@@ -181,7 +181,7 @@ class Board:
                     valid_neighbours = []
                     for elem in neighbours:
 
-                        if elem[0] >= 0 and elem[1] >= 0 and elem[0] < constants.BOARD_SIZE and \
+                        if 0 <= elem[0] < constants.BOARD_SIZE and elem[1] >= 0 and \
                                 elem[1] < constants.BOARD_SIZE and board[elem[0],elem[1]] == 0:
                             valid_neighbours.append(elem)
 

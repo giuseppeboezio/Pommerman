@@ -21,7 +21,7 @@ class DiscriminatorNet(nn.Module):
         self.conv3 = nn.Conv2d(num_channels, num_channels, kernel_size=(3,3), padding=1)
         flat_dimension = constants.BOARD_SIZE * constants.BOARD_SIZE * num_channels
         self.linear1 = nn.Linear(flat_dimension, round(flat_dimension / 3))
-        self.linear2 = nn.Linear(645, 1)
+        self.linear2 = nn.Linear(round(flat_dimension / 3), 1)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -66,6 +66,9 @@ def train_loop(dataloader, model, optimizer, loss_fun):
     for batch, (X, y) in enumerate(dataloader):
 
         # Compute prediction and loss
+        # normalization of the values in the tensor
+        X /= torch.max(X)
+        print(X.dtype)
         pred = model(X)
 
         # reshape of y
@@ -91,6 +94,8 @@ def test_loop(dataloader, model, loss_fun):
 
     with torch.no_grad():
         for X, y in dataloader:
+
+            X /= torch.max(X)
             pred = model(X)
 
             # reshape of y
