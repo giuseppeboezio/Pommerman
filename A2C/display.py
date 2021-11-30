@@ -44,10 +44,11 @@ def main():
             print("Board")
             print(obs['board'])
 
-            distances = m1.get_distances(obs)
+            print("Bomb life")
+            print(obs['bomb_life'])
 
-            print("Distances")
-            print(distances)
+            print("Actions")
+            print(actions)
 
 
             # action, distribution, val = display_agent.act(obs, spaces.Discrete(len(name_acts)))

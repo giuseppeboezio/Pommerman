@@ -63,6 +63,7 @@ class SurvivorAgent(agents.BaseAgent):
 
             self.target_defined = True
 
+        # follow the path
         print("Path:")
         for elem in self.path:
             print(f"{elem}")
@@ -83,33 +84,32 @@ class SurvivorAgent(agents.BaseAgent):
             # casting of the type and reshaping of the tensor
             input_net = input_net.float()
             input_net = torch.reshape(input_net, (1, 1, constants.BOARD_SIZE, constants.BOARD_SIZE))
-            print(input_net.shape)
             # input_net /= torch.max(input_net)
 
             with torch.no_grad():
 
                 prob = self.model(input_net)
 
-            if prob > 0:
+            #if prob > 0:
 
-                self.path.pop(0)
+            self.path.pop(0)
 
-                if ag_pos[0] == next_position[0] and ag_pos[1] < next_position[1]:
-                    action = constants.Action.Right
-                elif ag_pos[0] == next_position[0] and ag_pos[1] < next_position[1]:
-                    action = constants.Action.Left
-                elif ag_pos[1] == next_position[1] and ag_pos[0] < next_position[0]:
-                    action = constants.Action.Down
-                else:
-                    action = constants.Action.Up
-
+            if ag_pos[0] == next_position[0] and ag_pos[1] < next_position[1]:
+                action = constants.Action.Right
+            elif ag_pos[0] == next_position[0] and ag_pos[1] < next_position[1]:
+                action = constants.Action.Left
+            elif ag_pos[1] == next_position[1] and ag_pos[0] < next_position[0]:
+                action = constants.Action.Down
             else:
+                action = constants.Action.Up
 
-                action = constants.Action.Stop
+            #else:
 
-            print(f"Action: {action}")
+                #action = constants.Action.Stop
 
-            return action
+        print(f"Action: {action}")
+
+        return action
 
 
 def main():
