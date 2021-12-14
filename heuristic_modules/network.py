@@ -1,6 +1,7 @@
 from pommerman import constants
 import pandas as pd
 import os
+import numpy as np
 
 import torch
 from torch import nn
@@ -16,7 +17,7 @@ class DiscriminatorNet(nn.Module):
 
     def __init__(self, num_channels):
         super(DiscriminatorNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, num_channels, kernel_size=(3,3), padding=1)
+        self.conv1 = nn.Conv2d(5, num_channels, kernel_size=(3,3), padding=1)
         self.conv2 = nn.Conv2d(num_channels, num_channels, kernel_size=(3,3), padding=1)
         self.conv3 = nn.Conv2d(num_channels, num_channels, kernel_size=(3,3), padding=1)
         flat_dimension = constants.BOARD_SIZE * constants.BOARD_SIZE * num_channels
@@ -50,14 +51,15 @@ class BoardDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0])
-        image = read_image(img_path)
-        image = image.float()
+        image = np.loadtxt(img_path, delimiter=',')
+        image = image.reshape((constants.BOARD_SIZE, constants.BOARD_SIZE, 5))
+        im_torch = torch.from_numpy(image)
         label = self.img_labels.iloc[idx, 1]
         if self.transform:
             image = torch.from_numpy(image)
         if self.target_transform:
             label = self.target_transform(label)
-        return image, label
+        return im_torch, label
 
 
 def train_loop(dataloader, model, optimizer, loss_fun):
@@ -67,9 +69,6 @@ def train_loop(dataloader, model, optimizer, loss_fun):
 
         # Compute prediction and loss
         # normalization of the values in the tensor
-        X /= torch.max(X)
-        print(X[0])
-        print(y[0])
         pred = model(X)
 
         # reshape of y
@@ -96,7 +95,6 @@ def test_loop(dataloader, model, loss_fun):
     with torch.no_grad():
         for X, y in dataloader:
 
-            X /= torch.max(X)
             pred = model(X)
 
             # reshape of y
