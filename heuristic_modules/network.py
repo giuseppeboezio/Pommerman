@@ -68,7 +68,8 @@ def train_loop(dataloader, model, optimizer, loss_fun):
         # Compute prediction and loss
         # normalization of the values in the tensor
         X /= torch.max(X)
-        print(X.dtype)
+        print(X[0])
+        print(y[0])
         pred = model(X)
 
         # reshape of y

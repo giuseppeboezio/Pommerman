@@ -10,22 +10,35 @@ import time
 def preprocess_state_avoidance(board, position):
     """Create the input for the NN
     position: tuple containing the position to evaluate
-    passage: 0
-    bombs: 3
-    my agent's position: 10
-    marked position: 14
-    other objects: 15"""
+    passage: first channel
+    bombs: second channel
+    my agent's position: third channel
+    marked position: forth channel
+    other objects: fifth channel"""
 
-    input_state = np.array(board)
+    size = constants.BOARD_SIZE
+    channels = 5
+
+    input_nn = np.zeros((size, size, channels))
+
     for i in range(constants.BOARD_SIZE):
         for j in range(constants.BOARD_SIZE):
-            # not relevant objects
-            if 0 < input_state[i, j] < 3 or 3 < input_state[i, j] < 10 or input_state[i, j] > 10:
-                input_state[i, j] = 15
             # marked position
-            if i == position[0] and j == position[1]:
-                input_state[i, j] = 14
-    return input_state
+            if position[0] == i and position[1] == j:
+                input_nn[i,j,3] = 1
+            # the element is a passage
+            elif board[i,j] == constants.Item.Passage.value:
+                input_nn[i,j,0] = 1
+            # the element is a bomb
+            elif board[i,j] == constants.Item.Bomb.value:
+                input_nn[i,j,1] = 1
+            # agent's position
+            elif board[i,j] == constants.Item.Agent0.value:
+                input_nn[i,j,2] = 1
+            else:
+                input_nn[i,j,4] = 1
+
+    return input_nn
 
 
 def get_object_positions(state, id_object):
@@ -179,7 +192,7 @@ def collect_data(num):
 def main():
 
     # number of samples to collect for each class
-    num = 200000
+    num = 2000
 
     input_list, labels = collect_data(num)
 
@@ -203,5 +216,5 @@ def launch_training_and_test():
 
 
 if __name__ == '__main__':
-    launch_training_and_test()
-    # main()
+    # launch_training_and_test()
+    main()
