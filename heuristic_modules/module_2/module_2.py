@@ -216,5 +216,5 @@ def launch_training_and_test():
 
 
 if __name__ == '__main__':
-    # launch_training_and_test()
-    main()
+    launch_training_and_test()
+    # main()

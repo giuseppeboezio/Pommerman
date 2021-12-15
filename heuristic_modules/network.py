@@ -10,16 +10,15 @@ from torch.utils.data import Dataset
 from torch.nn import BCELoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader
-from torchvision.io import read_image
 
 
 class DiscriminatorNet(nn.Module):
 
     def __init__(self, num_channels):
         super(DiscriminatorNet, self).__init__()
-        self.conv1 = nn.Conv2d(5, num_channels, kernel_size=(3,3), padding=1)
-        self.conv2 = nn.Conv2d(num_channels, num_channels, kernel_size=(3,3), padding=1)
-        self.conv3 = nn.Conv2d(num_channels, num_channels, kernel_size=(3,3), padding=1)
+        self.conv1 = nn.Conv3d(5, num_channels, kernel_size=(3,3), padding=1)
+        self.conv2 = nn.Conv3d(num_channels, num_channels, kernel_size=(3,3), padding=1)
+        self.conv3 = nn.Conv3d(num_channels, num_channels, kernel_size=(3,3), padding=1)
         flat_dimension = constants.BOARD_SIZE * constants.BOARD_SIZE * num_channels
         self.linear1 = nn.Linear(flat_dimension, round(flat_dimension / 3))
         self.linear2 = nn.Linear(round(flat_dimension / 3), 1)
@@ -51,9 +50,12 @@ class BoardDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0])
+        # reading the array from the file and reshape it in 3d
         image = np.loadtxt(img_path, delimiter=',')
         image = image.reshape((constants.BOARD_SIZE, constants.BOARD_SIZE, 5))
+        # create the tensor adjusting dimensions and type
         im_torch = torch.from_numpy(image)
+        im_torch = torch.reshape(im_torch, (5,constants.BOARD_SIZE, constants.BOARD_SIZE))
         label = self.img_labels.iloc[idx, 1]
         if self.transform:
             image = torch.from_numpy(image)
@@ -68,7 +70,6 @@ def train_loop(dataloader, model, optimizer, loss_fun):
     for batch, (X, y) in enumerate(dataloader):
 
         # Compute prediction and loss
-        # normalization of the values in the tensor
         pred = model(X)
 
         # reshape of y

@@ -44,11 +44,9 @@ def main():
             print("Board")
             print(obs['board'])
 
-            print("Bomb life")
-            print(obs['bomb_life'])
+            print("Blast strength")
+            print(obs['bomb_blast_strength'])
 
-            print("Actions")
-            print(actions)
 
 
             # action, distribution, val = display_agent.act(obs, spaces.Discrete(len(name_acts)))
