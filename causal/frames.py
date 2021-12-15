@@ -1,5 +1,7 @@
 import numpy as np
 from pommerman import constants, make, agents
+import pandas as pd
+import os
 
 # class to manage the bomb
 
@@ -145,6 +147,21 @@ def generate_patches():
     # number of episodes to run to collect patches
     num_ep = 1000
 
+    # names of each dimension of the vector
+    names = ['w', 'h']
+    ts_1 = [f"{i}_ts1" for i in range(14)]
+    ts_2 = [f"{i}_ts2" for i in range(14)]
+    names = names + ts_1 + ts_2
+
+    # number of sequences of patches obtained from the same bomb
+    num = 0
+
+    # path to save csv files
+    path = "C:/Users/boezi/PycharmProjects/Pommerman/causal/patches"
+
+    # list of patches
+    list_patches = []
+
     for ep in range(num_ep):
 
         print(f"Episode {ep}")
@@ -187,16 +204,21 @@ def generate_patches():
                     patch = np.concatenate((first_ch,second_ch))
                     # generation of the vector
                     point = generate_point(patch)
-
-                    # TODO updating list of points relative to the same bomb
+                    # adding the point to the list
+                    list_patches.append(point)
 
                     first_ch = second_ch
 
+                # looking for another bomb
                 else:
-
-                    # looking for another bomb
-
-                    # TODO save the list in a csv file
+                    num += 1
+                    # creation of the dataframe
+                    df = pd.DataFrame.from_items(zip(names,list_patches))
+                    # save data as csv file
+                    df.to_csv(os.path.join(path,f"{num}.csv"), index=False)
+                    # flush the list of patches
+                    list_patches = []
+                    # change the flag to look for another bomb
                     bomb_found = False
 
             # action of each agent
