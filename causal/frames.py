@@ -107,60 +107,6 @@ def bomb_on_board(board):
     return found, pos_x, pos_y
 
 
-def generate_patches():
-
-    config = "PommeFFACompetition-v0"
-    game_state_file = None
-
-    my_agents = [agents.SimpleAgent(), agents.SimpleAgent(), agents.SimpleAgent(), agents.SimpleAgent()]
-
-    env = make(config, my_agents, game_state_file)
-
-    # number of episodes to run to collect patches
-    num_ep = 1000
-
-    for ep in range(num_ep):
-
-        print(f"Episode {ep}")
-
-        state = env.reset()
-
-        # position of the bomb to use as center of the patch
-        pos_x = -1
-        pos_y = -1
-
-        # flag to understand whether the bomb to use for the patch has been found or not
-        bomb_found = False
-
-        # flag for episode termination
-        done = False
-
-        while not done:
-
-            obs = state[0]
-
-            # the bomb has not been found
-            if not bomb_found:
-
-                life_bombs = obs['bomb_life']
-                bomb_found, pos_x, pos_y = bomb_on_board(life_bombs)
-
-                if bomb_found:
-
-                    blast = obs['bomb_blast_strength'][pos_x, pos_y]
-                    bomb = Bomb(pos_x, pos_y, blast)
-                    first_patch = get_timestep_patch(obs['board'], bomb)
-
-
-
-            # there is a bomb
-
-            else:
-
-
-
-
-
 def generate_point(patch):
     """patch is a numpy array having shape[2] == 2"""
 
@@ -187,3 +133,73 @@ def generate_point(patch):
     return point
 
 
+def generate_patches():
+
+    config = "PommeFFACompetition-v0"
+    game_state_file = None
+
+    my_agents = [agents.SimpleAgent(), agents.SimpleAgent(), agents.SimpleAgent(), agents.SimpleAgent()]
+
+    env = make(config, my_agents, game_state_file)
+
+    # number of episodes to run to collect patches
+    num_ep = 1000
+
+    for ep in range(num_ep):
+
+        print(f"Episode {ep}")
+
+        state = env.reset()
+
+        # flag to understand whether the bomb to use for the patch has been found or not
+        bomb_found = False
+        bomb = None
+
+        # first_channel and second channel of the patch
+        first_ch = None
+
+        # flag for episode termination
+        done = False
+
+        while not done:
+
+            obs = state[0]
+
+            # the bomb has not been found
+            if not bomb_found:
+
+                life_bombs = obs['bomb_life']
+                bomb_found, pos_x, pos_y = bomb_on_board(life_bombs)
+
+                if bomb_found:
+
+                    blast = obs['bomb_blast_strength'][pos_x, pos_y]
+                    bomb = Bomb(pos_x, pos_y, blast)
+                    first_ch = get_timestep_patch(obs['board'], bomb)
+
+            # there is a bomb to use for the patches
+            else:
+                # the bomb has not exploded
+                if obs['bomb_life'][bomb.get_pos_x(), bomb.get_pos_y()] > 0:
+
+                    second_ch = get_timestep_patch(obs['board'], bomb)
+                    # creation of the patch
+                    patch = np.concatenate((first_ch,second_ch))
+                    # generation of the vector
+                    point = generate_point(patch)
+
+                    # TODO updating list of points relative to the same bomb
+
+                    first_ch = second_ch
+
+                else:
+
+                    # looking for another bomb
+
+                    # TODO save the list in a csv file
+                    bomb_found = False
+
+            # action of each agent
+            agent_actions = env.act(state)
+            # new state after the actions
+            state, reward, done, info = env.step(agent_actions)
