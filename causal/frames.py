@@ -29,6 +29,9 @@ class Bomb:
     def get_pos_y(self):
         return self.pos_y
 
+    def get_life(self):
+        return self.life_time
+
 
 def get_timestep_patch(board, bomb):
     """Patch obtained by the board with the bomb"""
@@ -100,7 +103,7 @@ def bomb_on_board(board):
 
     for i in range(constants.BOARD_SIZE):
         for j in range(constants.BOARD_SIZE):
-            if board[i,j] == 10:
+            if board[i,j] == 9:
                 pos_x = i
                 pos_y = j
                 found = True
@@ -194,10 +197,13 @@ def generate_patches():
                     bomb = Bomb(pos_x, pos_y, blast)
                     first_ch = get_timestep_patch(obs['board'], bomb)
 
+                    # decrease life of the bomb
+                    bomb.decrease_life()
+
             # there is a bomb to use for the patches
             else:
                 # the bomb has not exploded
-                if obs['bomb_life'][bomb.get_pos_x(), bomb.get_pos_y()] > 0:
+                if bomb.get_life() >= 0:
 
                     second_ch = get_timestep_patch(obs['board'], bomb)
                     # creation of the patch
@@ -208,6 +214,7 @@ def generate_patches():
                     list_patches.append(point)
 
                     first_ch = second_ch
+                    bomb.decrease_life()
 
                 # looking for another bomb
                 else:
@@ -240,6 +247,7 @@ def generate_patches():
             # save data as csv file
             df.to_csv(os.path.join(path, f"{num}.csv"), index=False)
         '''
+
 
 def main():
 

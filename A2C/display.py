@@ -45,7 +45,7 @@ def main():
             print(obs['board'])
 
             print("Blast strength")
-            print(obs['bomb_blast_strength'])
+            print(obs['bomb_life'])
 
 
 
