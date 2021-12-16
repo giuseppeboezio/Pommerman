@@ -33,7 +33,7 @@ class Bomb:
 def get_timestep_patch(board, bomb):
     """Patch obtained by the board with the bomb"""
 
-    blast_strength = bomb.get_blast()
+    blast_strength = int(bomb.get_blast())
     pos_x = bomb.get_pos_x()
     pos_y = bomb.get_pos_y()
 
@@ -100,7 +100,7 @@ def bomb_on_board(board):
 
     for i in range(constants.BOARD_SIZE):
         for j in range(constants.BOARD_SIZE):
-            if board[i,j] > 0:
+            if board[i,j] == 10:
                 pos_x = i
                 pos_y = j
                 found = True
@@ -159,9 +159,6 @@ def generate_patches():
     # path to save csv files
     path = "C:/Users/boezi/PycharmProjects/Pommerman/causal/patches"
 
-    # list of patches
-    list_patches = []
-
     for ep in range(num_ep):
 
         print(f"Episode {ep}")
@@ -174,6 +171,9 @@ def generate_patches():
 
         # first_channel and second channel of the patch
         first_ch = None
+
+        # list of patches
+        list_patches = []
 
         # flag for episode termination
         done = False
@@ -201,7 +201,7 @@ def generate_patches():
 
                     second_ch = get_timestep_patch(obs['board'], bomb)
                     # creation of the patch
-                    patch = np.concatenate((first_ch,second_ch))
+                    patch = np.stack((first_ch, second_ch))
                     # generation of the vector
                     point = generate_point(patch)
                     # adding the point to the list
@@ -212,8 +212,10 @@ def generate_patches():
                 # looking for another bomb
                 else:
                     num += 1
+                    # conversion of the list in a 2d numpy array
+                    list_patches = np.array(list_patches)
                     # creation of the dataframe
-                    df = pd.DataFrame.from_items(zip(names,list_patches))
+                    df = pd.DataFrame(list_patches, columns=names)
                     # save data as csv file
                     df.to_csv(os.path.join(path,f"{num}.csv"), index=False)
                     # flush the list of patches
@@ -225,3 +227,24 @@ def generate_patches():
             agent_actions = env.act(state)
             # new state after the actions
             state, reward, done, info = env.step(agent_actions)
+
+        '''# consider the situation in which the game ends but there are some not stored patches
+        if len(list_patches) > 0:
+
+            num += 1
+
+            # conversion of the list in a 2d numpy array
+            list_patches = np.array(list_patches)
+            # creation of the dataframe
+            df = pd.DataFrame(list_patches, columns=names)
+            # save data as csv file
+            df.to_csv(os.path.join(path, f"{num}.csv"), index=False)
+        '''
+
+def main():
+
+    generate_patches()
+
+
+if __name__ == '__main__':
+    main()
