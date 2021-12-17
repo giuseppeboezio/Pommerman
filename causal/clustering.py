@@ -7,12 +7,12 @@ from sklearn.model_selection import ParameterGrid
 
 def generate_dataset(path):
     """Generate a single dataset starting from different files in a directory"""
-
-    dataset = np.empty((1,30))
+    dim_vector = 30
+    dataset = np.empty((1,dim_vector))
 
     for file in os.listdir(path):
         name = os.path.join(path, file)
-        data = np.loadtxt(name)
+        data = np.loadtxt(name, delimiter=',', skiprows=1)
         dataset = np.concatenate((dataset, data))
 
     # remove first row
@@ -46,3 +46,14 @@ def find_best_param(X):
                 print("{:11.2f}\t{:11}\t{:11}\t{:11.2f}\t{:11.2f}%" \
                       .format(db.eps, db.min_samples, n_clusters, silhouette, uncl_p))
 
+
+def main():
+
+    path = "C:/Users/boezi/PycharmProjects/Pommerman/causal/patches"
+    X = generate_dataset(path)
+    print(f"Number of data points: {X.shape[0]}")
+    find_best_param(X)
+
+
+if __name__ == '__main__':
+    main()

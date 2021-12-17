@@ -213,7 +213,7 @@ def generate_patches():
                     # adding the point to the list
                     list_patches.append(point)
 
-                    first_ch = second_ch
+                    first_ch = np.array(second_ch)
                     bomb.decrease_life()
 
                 # looking for another bomb
