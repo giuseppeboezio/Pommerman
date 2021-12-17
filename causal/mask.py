@@ -42,3 +42,7 @@ def show_board_and_mask():
             # new state after the actions
             state, reward, done, info = env.step(agent_actions)
             num_step = num_step + 1
+
+
+if __name__ == '__main__':
+    show_board_and_mask()
