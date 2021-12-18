@@ -2,6 +2,19 @@ from pommerman import constants, make, agents
 import numpy as np
 
 
+def get_mask(board_1, board_2):
+    """Produce a mask of the changes among states"""
+
+    rows = board_1.shape[0]
+    cols = board_1.shape[1]
+    mask = np.zeros((rows, cols))
+    for i in range(rows):
+        for j in range(cols):
+            if board_1[i,j] != board_2[i,j]:
+                mask[i,j] = 1
+    return mask
+
+
 def show_board_and_mask():
 
     config = "PommeFFACompetition-v0"
@@ -22,6 +35,8 @@ def show_board_and_mask():
 
         while not done:
 
+            print(f"Step: {num_step}")
+
             obs = state[0]
 
             # at the initial step there is no variation of values on the board
@@ -33,8 +48,9 @@ def show_board_and_mask():
 
             else:
 
-                mask = not obs['board'] == old_board
+                mask = get_mask(obs['board'], old_board)
                 comparison = np.concatenate((obs['board'], mask), axis=1)
+                print(comparison)
 
             old_board = np.array(obs['board'])
             # action of each agent
