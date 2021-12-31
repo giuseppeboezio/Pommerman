@@ -2,6 +2,7 @@ from pommerman.agents import BaseAgent
 from pommerman import constants
 from heuristic_modules.module_1 import get_distances
 from enum import Enum
+import numpy as np
 import target_1 as tg_one
 import target_2 as tg_two
 
@@ -101,9 +102,14 @@ class PlannerAgent(BaseAgent):
         # looking for a safe position
         elif self.target == Target.Safe.Safe:
             if not self.defined:
-                distances, nodes = get_distances(obs)
                 # find positions where the agent can be possibly killed
-                dangerous_pos = get_dangerous_positions(obs)
+                dangerous_pos = tg_two.get_dangerous_positions(obs)
+                dangerous_pos = set(dangerous_pos)
+                new_obs = tg_two.change_board(obs['board'], dangerous_pos)
+                distances, nodes = get_distances(new_obs)
+                target_pos = tg_two.get_target_pos(distances)
+
+
 
         # pick up a power-up
         else:
