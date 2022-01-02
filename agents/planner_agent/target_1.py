@@ -1,4 +1,5 @@
 import numpy as np
+import agent
 from pommerman import constants
 from pommerman.constants import Item
 from scipy.special import softmax
@@ -11,17 +12,6 @@ def get_positions(nodes):
     positions = []
     for node in conn_nodes:
         positions.append(node.get_position())
-
-    return positions
-
-
-def get_positions_power_up(board):
-    """Return the positions of the power-up on the board"""
-    positions = []
-    for i in range(constants.BOARD_SIZE):
-        for j in range(constants.BOARD_SIZE):
-            if board[i,j] == Item.ExtraBomb.value or board[i,j] == Item.Kick.value or board[i,j] == Item.IncrRange.value:
-                positions.append((i,j))
 
     return positions
 
@@ -41,7 +31,7 @@ def forward_step(positions, obs):
     """Produce a forward state for each possible position and return the target position of the agent"""
 
     num_items = []
-    pos_pow_up = get_positions_power_up(obs['board'])
+    pos_pow_up = agent.get_positions_power_up(obs['board'])
     pow_up_set = set(pos_pow_up)
 
     for position in positions:

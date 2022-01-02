@@ -1,10 +1,13 @@
 from pommerman.agents import BaseAgent
+from pommerman.constants import Item
 from pommerman import constants
 from heuristic_modules.module_1 import get_distances
 from enum import Enum
 import numpy as np
 import target_1 as tg_one
 import target_2 as tg_two
+import target_3 as tg_three
+import copy
 
 
 def generate_path(nodes, target_pos):
@@ -49,6 +52,26 @@ def get_action(ag_pos, target_pos):
     return action
 
 
+def get_positions_power_up(board):
+    """Return the positions of the power-up on the board"""
+    positions = []
+    for i in range(constants.BOARD_SIZE):
+        for j in range(constants.BOARD_SIZE):
+            if board[i,j] == Item.ExtraBomb.value or board[i,j] == Item.Kick.value or board[i,j] == Item.IncrRange.value:
+                positions.append((i,j))
+
+    return positions
+
+
+def change_board(board, positions, value):
+    """Update the board setting to rigid walls position where the agent could be killed"""
+    new_board = np.array(board)
+    for pos in positions:
+        new_board[pos[0],pos[1]] = value
+
+    return new_board
+
+
 class Target(Enum):
     """Target of the agent"""
 
@@ -68,7 +91,7 @@ class PlannerAgent(BaseAgent):
         self.target = Target.Bomb.value  # target to achieve
         self.defined = False  # flag to establish if the target position has been found or not
         self.position = None  # position to reach from the current one
-        self.path = []  # path of nodes to follow to reach target position
+        self.target_pos = None  # Target position to reach
 
     def act(self, obs, action_space):
 
@@ -80,39 +103,88 @@ class PlannerAgent(BaseAgent):
                 # obtaining position where it could be possible to put a bomb
                 positions = tg_one.get_positions(nodes)
                 # forward step
-                target_pos = tg_one.forward_step(positions, obs)
-                # update the path
-                self.path = generate_path(nodes, target_pos)
+                self.target_pos = tg_one.forward_step(positions, obs)
                 self.defined = True
 
-            # There are still positions to cross
-            if len(self.path) > 0:
-
-                next_position = self.path[0]
+            # update the path
+            distances, nodes = get_distances(obs)
+            path = generate_path(nodes, self.target_pos)
+            # at each step I check whether there is a path to reach the position or not
+            if len(path) > 0:
+                next_position = path[0]
                 action = get_action(obs['position'], next_position)
-                self.path.pop(0)
-
-            # The agent has reached the target position, it can place the bomb
             else:
-
-                action = constants.Action.Bomb
-                self.defined = False
-                self.target = Target.Safe.value
+                # the current position of the agent is the target position
+                if obs['position'][0] == self.target[0] and obs['position'][1] == self.target[1]:
+                    action = constants.Action.Bomb
+                    self.defined = False
+                    self.target = Target.Safe.value
+                else:
+                    # case in which it is no more possible to reach the target
+                    action = constants.Action.Stop
 
         # looking for a safe position
-        elif self.target == Target.Safe.Safe:
+        elif self.target == Target.Safe.value:
             if not self.defined:
                 # find positions where the agent can be possibly killed
                 dangerous_pos = tg_two.get_dangerous_positions(obs)
                 dangerous_pos = set(dangerous_pos)
-                new_obs = tg_two.change_board(obs['board'], dangerous_pos)
+                # create a board which takes into account possible dangerous positions
+                new_board = change_board(obs['board'], dangerous_pos, Item.Rigid.value)
+                new_obs = copy.copy(obs)
+                new_obs['board'] = new_board
+                # use Dijkstra's algorithm to find distances and keep the closest position
                 distances, nodes = get_distances(new_obs)
-                target_pos = tg_two.get_target_pos(distances)
+                self.target_pos = tg_two.get_target_pos(distances)
+                # generate the path to follow to reach that position
+                self.defined = True
 
+            # update the path
+            distances, nodes = get_distances(obs)
+            path = generate_path(nodes, self.target_pos)
+            # at each step I check whether there is a path to reach the position or not
+            if len(path) > 0:
+                next_position = path[0]
+                action = get_action(obs['position'], next_position)
+            else:
+                # the current position of the agent is the target position
+                if obs['position'][0] == self.target[0] and obs['position'][1] == self.target[1]:
+                    self.defined = False
+                    self.target = Target.Collect.value
 
+                action = constants.Action.Stop
 
         # pick up a power-up
         else:
-            pass
+            if not self.defined:
+                pow_up_pos = get_positions_power_up(obs['board'])
+                # change the board allowing to reach power-ups
+                new_board = change_board(obs['board'], pow_up_pos, Item.Passage)
+                new_obs = copy.copy(obs)
+                new_obs['board'] = new_board
+                # execute Dijkstra's algorithm to get distances
+                distances, nodes = get_distances(new_obs)
+                self.target_pos = tg_three.get_target_collect(distances, set(pow_up_pos))
+                self.defined = True
+
+            pow_up_pos = get_positions_power_up(obs['board'])
+            # change the board allowing to reach power-ups
+            new_board = change_board(obs['board'], pow_up_pos, Item.Passage)
+            new_obs = copy.copy(obs)
+            new_obs['board'] = new_board
+            # execute Dijkstra's algorithm to get distances
+            distances, nodes = get_distances(new_obs)
+            path = generate_path(nodes, self.target_pos)
+            # at each step I check whether there is a path to reach the position or not
+            if len(path) > 0:
+                next_position = path[0]
+                action = get_action(obs['position'], next_position)
+            else:
+                # the current position of the agent is the target position
+                if obs['position'][0] == self.target[0] and obs['position'][1] == self.target[1]:
+                    self.defined = False
+                    self.target = Target.Bomb.value
+
+                action = constants.Action.Stop
 
         return action

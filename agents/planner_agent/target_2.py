@@ -68,15 +68,14 @@ def get_dangerous_positions(obs):
     return dang_pos
 
 
-def change_board(board, positions):
-    """Update the board setting to rigid walls position where the agent could be killed"""
-    new_board = np.array(board)
-    for pos in positions:
-        new_board[pos[0],pos[1]] = Item.Rigid.value
-
-    return new_board
-
-
 def get_target_pos(distances):
     """Return the position with the minimum distance from the current position of the agent"""
-    pass
+    position = (-1,-1)
+    value = np.inf
+    for i in range(constants.BOARD_SIZE):
+        for j in range(constants.BOARD_SIZE):
+            if distances[i,j] < value:
+                position = (i,j)
+                value = distances[i,j]
+
+    return position
