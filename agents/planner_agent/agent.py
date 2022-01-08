@@ -8,6 +8,7 @@ import target_1 as tg_one
 import target_2 as tg_two
 import target_3 as tg_three
 import copy
+from utility import show_board
 
 
 def generate_path(nodes, target_pos):
@@ -94,6 +95,14 @@ class PlannerAgent(BaseAgent):
 
     def act(self, obs, action_space):
 
+        # print for debugging
+        print("Information")
+        print("-----------")
+        print(f"Target : {self.target}")
+        print(f"Target position: {self.target_pos}")
+        print(f"Board")
+        print(show_board(obs['board']))
+
         # the objective is putting a bomb
         if self.target == Target.Bomb.value:
             # the objective is finding the position where to put the bomb
@@ -114,7 +123,7 @@ class PlannerAgent(BaseAgent):
                 action = get_action(obs['position'], next_position)
             else:
                 # the current position of the agent is the target position
-                if obs['position'][0] == self.target[0] and obs['position'][1] == self.target[1]:
+                if obs['position'][0] == self.target_pos[0] and obs['position'][1] == self.target_pos[1]:
                     action = constants.Action.Bomb
                     self.defined = False
                     self.target = Target.Safe.value
@@ -147,7 +156,7 @@ class PlannerAgent(BaseAgent):
                 action = get_action(obs['position'], next_position)
             else:
                 # the current position of the agent is the target position
-                if obs['position'][0] == self.target[0] and obs['position'][1] == self.target[1]:
+                if obs['position'][0] == self.target_pos[0] and obs['position'][1] == self.target_pos[1]:
                     self.defined = False
                     self.target = Target.Collect.value
 
@@ -179,7 +188,7 @@ class PlannerAgent(BaseAgent):
                 action = get_action(obs['position'], next_position)
             else:
                 # the current position of the agent is the target position
-                if obs['position'][0] == self.target[0] and obs['position'][1] == self.target[1]:
+                if obs['position'][0] == self.target_pos[0] and obs['position'][1] == self.target_pos[1]:
                     self.defined = False
                     self.target = Target.Bomb.value
 

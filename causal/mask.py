@@ -3,43 +3,6 @@ import numpy as np
 import colorama
 
 
-def color_sign(x):
-    if x == 0:
-        c = colorama.Fore.LIGHTBLACK_EX
-    elif x == 1:
-        c = colorama.Fore.BLACK
-    elif x == 2:
-        c = colorama.Fore.BLUE
-    elif x == 3:
-        c = colorama.Fore.RED
-    elif x == 4:
-        c = colorama.Fore.RED
-    elif x == 10:
-        c = colorama.Fore.YELLOW
-    elif x == 11:
-        c = colorama.Fore.CYAN
-    elif x == 12:
-        c = colorama.Fore.GREEN
-    elif x == 13:
-        c = colorama.Fore.MAGENTA
-    else:
-        c = colorama.Fore.WHITE
-    x = '{0: <2}'.format(x)
-    return f'{c}{x}{colorama.Fore.RESET}'
-
-
-def show_comparison(board):
-
-    # output = np.array(board, dtype=np.int64)
-    for i in range(board.shape[0]):
-        print("[", end='\t')
-        for j in range(board.shape[1]):
-            print(color_sign(int(board[i,j])), end='\t')
-            if j == round(board.shape[1] / 2) - 1:
-                print(' | ', end='\t')
-        print(']')
-
-
 def get_mask(board_1, board_2):
     """Produce a mask of the changes among states"""
 

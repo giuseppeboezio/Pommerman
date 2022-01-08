@@ -1,5 +1,6 @@
 from pommerman import constants
 from pommerman.constants import Item
+import colorama
 
 
 def get_dangerous_positions(board, blast_strength, position):
@@ -55,3 +56,38 @@ def get_dangerous_positions(board, blast_strength, position):
     dang_pos = left + right + up + down
 
     return dang_pos
+
+
+def color_sign(x):
+    if x == 0:
+        c = colorama.Fore.LIGHTBLACK_EX
+    elif x == 1:
+        c = colorama.Fore.BLACK
+    elif x == 2:
+        c = colorama.Fore.BLUE
+    elif x == 3:
+        c = colorama.Fore.RED
+    elif x == 4:
+        c = colorama.Fore.RED
+    elif x == 10:
+        c = colorama.Fore.YELLOW
+    elif x == 11:
+        c = colorama.Fore.CYAN
+    elif x == 12:
+        c = colorama.Fore.GREEN
+    elif x == 13:
+        c = colorama.Fore.MAGENTA
+    else:
+        c = colorama.Fore.WHITE
+    x = '{0: <2}'.format(x)
+    return f'{c}{x}{colorama.Fore.RESET}'
+
+
+def show_board(board):
+
+    # output = np.array(board, dtype=np.int64)
+    for i in range(board.shape[0]):
+        print("[", end='\t')
+        for j in range(board.shape[1]):
+            print(color_sign(int(board[i,j])), end='\t')
+        print(']')

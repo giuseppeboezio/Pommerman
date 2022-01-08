@@ -34,7 +34,7 @@ def get_target_position(obs, positions):
 
     num_des_walls = []
 
-    for i in range(positions):
+    for i in range(len(positions)):
         num_des_walls.append(destroyed_walls(obs, positions[i]))
 
     # choose the target position
