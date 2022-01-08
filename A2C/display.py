@@ -40,6 +40,7 @@ def main():
 
             # showing behaviour of our agent (first agent in the list)
             obs = state[0]
+            print(obs.keys())
 
             print("Board")
             print(obs['board'])

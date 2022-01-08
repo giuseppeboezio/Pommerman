@@ -81,7 +81,7 @@ class Target(Enum):
 
 
 # agent behaves in the following way:
-# Target 1: put the bomb in the position which reveals power up according to softmax probability
+# Target 1: put the bomb in the position where it is possible to destroy the highest number of wooden walls
 # Target 2: choose a position where to avoid being killed by a bomb
 # Target 3: choose the item to pick up according to a probability which depends on the distance from the object
 class PlannerAgent(BaseAgent):
@@ -90,7 +90,6 @@ class PlannerAgent(BaseAgent):
         super(PlannerAgent, self).__init__()
         self.target = Target.Bomb.value  # target to achieve
         self.defined = False  # flag to establish if the target position has been found or not
-        self.position = None  # position to reach from the current one
         self.target_pos = None  # Target position to reach
 
     def act(self, obs, action_space):
@@ -102,8 +101,8 @@ class PlannerAgent(BaseAgent):
                 distances, nodes = get_distances(obs)
                 # obtaining position where it could be possible to put a bomb
                 positions = tg_one.get_positions(nodes)
-                # forward step
-                self.target_pos = tg_one.forward_step(positions, obs)
+                # counting number of destroyed walls for each position
+                self.target_pos = tg_one.get_target_position(obs, positions)
                 self.defined = True
 
             # update the path
@@ -127,7 +126,7 @@ class PlannerAgent(BaseAgent):
         elif self.target == Target.Safe.value:
             if not self.defined:
                 # find positions where the agent can be possibly killed
-                dangerous_pos = tg_two.get_dangerous_positions(obs)
+                dangerous_pos = tg_two.get_positions(obs)
                 dangerous_pos = set(dangerous_pos)
                 # create a board which takes into account possible dangerous positions
                 new_board = change_board(obs['board'], dangerous_pos, Item.Rigid.value)
@@ -167,9 +166,8 @@ class PlannerAgent(BaseAgent):
                 self.target_pos = tg_three.get_target_collect(distances, set(pow_up_pos))
                 self.defined = True
 
-            pow_up_pos = get_positions_power_up(obs['board'])
             # change the board allowing to reach power-ups
-            new_board = change_board(obs['board'], pow_up_pos, Item.Passage)
+            new_board = change_board(obs['board'], [self.target_pos], Item.Passage)
             new_obs = copy.copy(obs)
             new_obs['board'] = new_board
             # execute Dijkstra's algorithm to get distances
@@ -186,5 +184,7 @@ class PlannerAgent(BaseAgent):
                     self.target = Target.Bomb.value
 
                 action = constants.Action.Stop
+
+        print(action)
 
         return action

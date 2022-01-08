@@ -10,7 +10,7 @@ def get_target_collect(distances, positions):
     for i in range(constants.BOARD_SIZE):
         for j in range(constants.BOARD_SIZE):
             # position of a reachable power-up
-            if (i,j) in positions and distances[i,j] > 0:
+            if (i,j) in positions and distances[i,j] > 0 and distances[i,j] != np.inf:
                 ordered_pos.append((i,j))
                 dis_items.append(distances[i,j])
 
