@@ -145,7 +145,7 @@ class PlannerAgent(BaseAgent):
                 new_obs['board'] = new_board
                 # use Dijkstra's algorithm to find distances and keep the closest position
                 distances, nodes = get_distances(new_obs)
-                self.target_pos = tg_two.get_target_pos(distances)
+                self.target_pos = tg_two.get_target_pos(distances, obs['position'])
                 # generate the path to follow to reach that position
                 self.defined = True
 
@@ -160,6 +160,7 @@ class PlannerAgent(BaseAgent):
                 # the current position of the agent is the target position
                 if obs['position'][0] == self.target_pos[0] and obs['position'][1] == self.target_pos[1]:
                     self.defined = False
+                    self.target_pos = None
                     self.target = Target.Collect.value
 
                 action = constants.Action.Stop
@@ -168,14 +169,19 @@ class PlannerAgent(BaseAgent):
         else:
             if not self.defined:
                 pow_up_pos = get_positions_power_up(obs['board'])
-                # change the board allowing to reach power-ups
-                new_board = change_board(obs['board'], pow_up_pos, Item.Passage)
-                new_obs = copy.copy(obs)
-                new_obs['board'] = new_board
-                # execute Dijkstra's algorithm to get distances
-                distances, nodes = get_distances(new_obs)
-                self.target_pos = tg_three.get_target_collect(distances, set(pow_up_pos))
-                self.defined = True
+                # check whether there is at least a power-up to pick
+                if len(pow_up_pos) > 0:
+                    # change the board allowing to reach power-ups
+                    new_board = change_board(obs['board'], pow_up_pos, Item.Passage)
+                    new_obs = copy.copy(obs)
+                    new_obs['board'] = new_board
+                    # execute Dijkstra's algorithm to get distances
+                    distances, nodes = get_distances(new_obs)
+                    self.target_pos = tg_three.get_target_collect(distances, set(pow_up_pos))
+                    self.defined = True
+                else:
+                    # there are no power-up, the agent waits for one of them
+                    return constants.Action.Stop
 
             # change the board allowing to reach power-ups
             new_board = change_board(obs['board'], [self.target_pos], Item.Passage)

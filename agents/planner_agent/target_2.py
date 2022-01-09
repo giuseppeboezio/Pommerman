@@ -19,14 +19,17 @@ def get_positions(obs):
     return dang_pos
 
 
-def get_target_pos(distances):
+def get_target_pos(distances, curr_position):
     """Return the position with the minimum distance from the current position of the agent"""
+    dis_without_curr_pos = np.array(distances)
+    # the agent is forced to move to reveal on the board the bomb it has just placed
+    dis_without_curr_pos[curr_position[0], curr_position[1]] = np.inf
     position = (-1,-1)
     value = np.inf
     for i in range(constants.BOARD_SIZE):
         for j in range(constants.BOARD_SIZE):
-            if distances[i,j] < value:
+            if dis_without_curr_pos[i,j] < value:
                 position = (i,j)
-                value = distances[i,j]
+                value = dis_without_curr_pos[i,j]
 
     return position
