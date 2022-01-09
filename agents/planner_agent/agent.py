@@ -139,6 +139,9 @@ class PlannerAgent(BaseAgent):
                 # find positions where the agent can be possibly killed
                 dangerous_pos = tg_two.get_positions(obs)
                 dangerous_pos = set(dangerous_pos)
+                # exclude the position of the agent from the dangerous position because it will be forced to move
+                if obs['position'] in dangerous_pos:
+                    dangerous_pos.remove(obs['position'])
                 # create a board which takes into account possible dangerous positions
                 new_board = change_board(obs['board'], dangerous_pos, Item.Rigid.value)
                 new_obs = copy.copy(obs)
@@ -181,6 +184,7 @@ class PlannerAgent(BaseAgent):
                     self.defined = True
                 else:
                     # there are no power-up, the agent waits for one of them
+                    self.target = Target.Safe.value
                     return constants.Action.Stop
 
             # change the board allowing to reach power-ups
