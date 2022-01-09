@@ -124,7 +124,7 @@ class PlannerAgent(BaseAgent):
             else:
                 # the current position of the agent is the target position
                 if obs['position'][0] == self.target_pos[0] and obs['position'][1] == self.target_pos[1]:
-                    # TODO check whether for action bomb a value instead of an object is requested
+                    # the action must be passed as a value
                     action = constants.Action.Bomb.value
                     self.defined = False
                     self.target_pos = None
@@ -181,31 +181,37 @@ class PlannerAgent(BaseAgent):
                     # execute Dijkstra's algorithm to get distances
                     distances, nodes = get_distances(new_obs)
                     self.target_pos = tg_three.get_target_collect(distances, set(pow_up_pos))
-                    self.defined = True
+                    # check whether a target has been found
+                    if self.target_pos is None:
+                        self.target = Target.Bomb.value
+                        return constants.Action.Stop
+                    else:
+                        self.defined = True
                 else:
-                    # there are no power-up, the agent waits for one of them
-                    self.target = Target.Safe.value
+                    # there are no power-up, the agent looks for a new position where to put a bomb
+                    self.target = Target.Bomb.value
                     return constants.Action.Stop
 
-            # change the board allowing to reach power-ups
-            new_board = change_board(obs['board'], [self.target_pos], Item.Passage.value)
-            new_obs = copy.copy(obs)
-            new_obs['board'] = new_board
-            # execute Dijkstra's algorithm to get distances
-            distances, nodes = get_distances(new_obs)
-            path = generate_path(nodes, self.target_pos)
-            # at each step I check whether there is a path to reach the position or not
-            if len(path) > 0:
-                next_position = path[0]
-                action = get_action(obs['position'], next_position)
-            else:
-                # the current position of the agent is the target position
-                if obs['position'][0] == self.target_pos[0] and obs['position'][1] == self.target_pos[1]:
-                    self.defined = False
-                    self.target_pos = None
-                    self.target = Target.Bomb.value
-
+            # check whether the agent is on the target position before the generation of the distance matrix
+            if obs['position'][0] == self.target_pos[0] and obs['position'][1] == self.target_pos[1]:
+                self.defined = False
+                self.target_pos = None
+                self.target = Target.Bomb.value
                 action = constants.Action.Stop
+            else:
+                # change the board allowing to reach power-ups
+                new_board = change_board(obs['board'], [self.target_pos], Item.Passage.value)
+                new_obs = copy.copy(obs)
+                new_obs['board'] = new_board
+                # execute Dijkstra's algorithm to get distances
+                distances, nodes = get_distances(new_obs)
+                path = generate_path(nodes, self.target_pos)
+                # at each step I check whether there is a path to reach the position or not
+                if len(path) > 0:
+                    next_position = path[0]
+                    action = get_action(obs['position'], next_position)
+                else:
+                    action = constants.Action.Stop
 
         print(action)
 

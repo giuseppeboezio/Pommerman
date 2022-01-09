@@ -9,8 +9,8 @@ def get_target_collect(distances, positions):
     dis_items = []
     for i in range(constants.BOARD_SIZE):
         for j in range(constants.BOARD_SIZE):
-            # position of a power-up
-            if (i,j) in positions:
+            # position of a power-up which can be reach by the agent starting from its current position
+            if (i,j) in positions and distances[i,j] > 0 and distances[i,j] != np.inf:
                 ordered_pos.append((i,j))
                 dis_items.append(distances[i,j])
 
@@ -21,6 +21,10 @@ def get_target_collect(distances, positions):
     idx = np.random.choice(range(len(ordered_pos)), p=soft_dis)
     target_pos = ordered_pos[idx]'''
 
-    target_pos = ordered_pos[np.argmin(dis_items)]
+    # check whether there are any power-up which can be reached without destroying wooden walls
+    if len(dis_items) > 0:
+        target_pos = ordered_pos[np.argmin(dis_items)]
+    else:
+        target_pos = None
 
     return target_pos
