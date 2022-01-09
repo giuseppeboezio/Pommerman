@@ -102,8 +102,6 @@ class PlannerAgent(BaseAgent):
         print(f"Target position: {self.target_pos}")
         print("Board")
         print(show_board(obs['board']))
-        print("Bombs")
-        print(show_board(obs['bomb_life']))
 
         # the objective is putting a bomb
         if self.target == Target.Bomb.value:
@@ -129,6 +127,7 @@ class PlannerAgent(BaseAgent):
                     # TODO check whether for action bomb a value instead of an object is requested
                     action = constants.Action.Bomb.value
                     self.defined = False
+                    self.target_pos = None
                     self.target = Target.Safe.value
                 else:
                     # case in which it is no more possible to reach the target
