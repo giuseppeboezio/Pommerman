@@ -10,7 +10,7 @@ def get_positions(obs):
     # collecting positions where there are bombs and positions affected by the blast strength
     for i in range(constants.BOARD_SIZE):
         for j in range(constants.BOARD_SIZE):
-            if obs['board'][i,j] == Item.Bomb.value:
+            if obs['bomb_life'][i,j] == 1.0:
                 position = (i,j)
                 blast_strength = int(obs['bomb_blast_strength'][position[0],position[1]] - 1)
                 board = obs['board']

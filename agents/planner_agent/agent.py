@@ -202,6 +202,7 @@ class PlannerAgent(BaseAgent):
                 # the current position of the agent is the target position
                 if obs['position'][0] == self.target_pos[0] and obs['position'][1] == self.target_pos[1]:
                     self.defined = False
+                    self.target_pos = None
                     self.target = Target.Bomb.value
 
                 action = constants.Action.Stop
