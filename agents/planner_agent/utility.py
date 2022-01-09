@@ -85,7 +85,6 @@ def color_sign(x):
 
 def show_board(board):
 
-    # output = np.array(board, dtype=np.int64)
     for i in range(board.shape[0]):
         print("[", end='\t')
         for j in range(board.shape[1]):
