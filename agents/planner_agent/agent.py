@@ -175,7 +175,7 @@ class PlannerAgent(BaseAgent):
                 # check whether there is at least a power-up to pick
                 if len(pow_up_pos) > 0:
                     # change the board allowing to reach power-ups
-                    new_board = change_board(obs['board'], pow_up_pos, Item.Passage)
+                    new_board = change_board(obs['board'], pow_up_pos, Item.Passage.value)
                     new_obs = copy.copy(obs)
                     new_obs['board'] = new_board
                     # execute Dijkstra's algorithm to get distances
@@ -188,7 +188,7 @@ class PlannerAgent(BaseAgent):
                     return constants.Action.Stop
 
             # change the board allowing to reach power-ups
-            new_board = change_board(obs['board'], [self.target_pos], Item.Passage)
+            new_board = change_board(obs['board'], [self.target_pos], Item.Passage.value)
             new_obs = copy.copy(obs)
             new_obs['board'] = new_board
             # execute Dijkstra's algorithm to get distances
