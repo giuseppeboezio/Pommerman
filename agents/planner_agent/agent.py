@@ -92,8 +92,10 @@ class PlannerAgent(BaseAgent):
         self.target = Target.Bomb.value  # target to achieve
         self.defined = False  # flag to establish if the target position has been found or not
         self.target_pos = None  # Target position to reach
+        self.corrective_strategy = True # flag to use when in one time step more than a strategy is used
 
     def act(self, obs, action_space):
+
 
         # print for debugging
         print("Information")
@@ -103,19 +105,32 @@ class PlannerAgent(BaseAgent):
         print("Board")
         print(show_board(obs['board']))
 
+        # avoid positions where the bomb could explode
+        dangerous_pos = tg_two.get_positions(obs)
+        dangerous_pos = set(dangerous_pos)
+        # exclude the position of the agent from the dangerous position
+        if obs['position'] in dangerous_pos:
+            dangerous_pos.remove(obs['position'])
+        # create a board which takes into account possible dangerous positions
+        new_board = change_board(obs['board'], dangerous_pos, Item.Rigid.value)
+        new_obs = copy.copy(obs)
+        new_obs['board'] = new_board
+
         # the objective is putting a bomb
         if self.target == Target.Bomb.value:
-            # the objective is finding the position where to put the bomb
+            # the objective is finding the position where to put the bomb avoiding to be killed by a bomb
             if not self.defined:
-                distances, nodes = get_distances(obs)
+
+                # use Dijkstra's algorithm to find distances
+                distances, nodes = get_distances(new_obs)
                 # obtaining position where it could be possible to put a bomb
                 positions = tg_one.get_positions(nodes)
                 # counting number of destroyed walls for each position
                 self.target_pos = tg_one.get_target_position(obs, positions)
                 self.defined = True
 
-            # update the path
-            distances, nodes = get_distances(obs)
+            # use Dijkstra's algorithm to find distances
+            distances, nodes = get_distances(new_obs)
             path = generate_path(nodes, self.target_pos)
             # at each step I check whether there is a path to reach the position or not
             if len(path) > 0:
@@ -136,16 +151,7 @@ class PlannerAgent(BaseAgent):
         # looking for a safe position
         elif self.target == Target.Safe.value:
             if not self.defined:
-                # find positions where the agent can be possibly killed
-                dangerous_pos = tg_two.get_positions(obs)
-                dangerous_pos = set(dangerous_pos)
-                # exclude the position of the agent from the dangerous position because it will be forced to move
-                if obs['position'] in dangerous_pos:
-                    dangerous_pos.remove(obs['position'])
-                # create a board which takes into account possible dangerous positions
-                new_board = change_board(obs['board'], dangerous_pos, Item.Rigid.value)
-                new_obs = copy.copy(obs)
-                new_obs['board'] = new_board
+
                 # use Dijkstra's algorithm to find distances and keep the closest position
                 distances, nodes = get_distances(new_obs)
                 self.target_pos = tg_two.get_target_pos(distances, obs['position'])
@@ -171,12 +177,11 @@ class PlannerAgent(BaseAgent):
         # pick up a power-up
         else:
             if not self.defined:
-                pow_up_pos = get_positions_power_up(obs['board'])
+                pow_up_pos = get_positions_power_up(new_obs['board'])
                 # check whether there is at least a power-up to pick
                 if len(pow_up_pos) > 0:
                     # change the board allowing to reach power-ups
-                    new_board = change_board(obs['board'], pow_up_pos, Item.Passage.value)
-                    new_obs = copy.copy(obs)
+                    new_board = change_board(new_obs['board'], pow_up_pos, Item.Passage.value)
                     new_obs['board'] = new_board
                     # execute Dijkstra's algorithm to get distances
                     distances, nodes = get_distances(new_obs)
@@ -192,26 +197,35 @@ class PlannerAgent(BaseAgent):
                     self.target = Target.Bomb.value
                     return constants.Action.Stop
 
-            # check whether the agent is on the target position before the generation of the distance matrix
-            if obs['position'][0] == self.target_pos[0] and obs['position'][1] == self.target_pos[1]:
+            # check whether on the target position there is still a power-up
+            if obs['board'][self.target_pos[0], self.target_pos[1]] == Item.IncrRange.value or \
+                obs['board'][self.target_pos[0], self.target_pos[1]] == Item.Kick.value or \
+                obs['board'][self.target_pos[0], self.target_pos[1]] == Item.ExtraBomb.value:
+                # check whether the agent is on the target position before the generation of the distance matrix
+                if obs['position'][0] == self.target_pos[0] and obs['position'][1] == self.target_pos[1]:
+                    self.defined = False
+                    self.target_pos = None
+                    self.target = Target.Bomb.value
+                    action = constants.Action.Stop
+                else:
+                    # change the board allowing to reach power-ups
+                    new_board = change_board(obs['board'], [self.target_pos], Item.Passage.value)
+                    new_obs = copy.copy(obs)
+                    new_obs['board'] = new_board
+                    # execute Dijkstra's algorithm to get distances
+                    distances, nodes = get_distances(new_obs)
+                    path = generate_path(nodes, self.target_pos)
+                    # at each step I check whether there is a path to reach the position or not
+                    if len(path) > 0:
+                        next_position = path[0]
+                        action = get_action(obs['position'], next_position)
+                    else:
+                        action = constants.Action.Stop
+            else:
+                # the agent must change the power-up target
                 self.defined = False
                 self.target_pos = None
-                self.target = Target.Bomb.value
                 action = constants.Action.Stop
-            else:
-                # change the board allowing to reach power-ups
-                new_board = change_board(obs['board'], [self.target_pos], Item.Passage.value)
-                new_obs = copy.copy(obs)
-                new_obs['board'] = new_board
-                # execute Dijkstra's algorithm to get distances
-                distances, nodes = get_distances(new_obs)
-                path = generate_path(nodes, self.target_pos)
-                # at each step I check whether there is a path to reach the position or not
-                if len(path) > 0:
-                    next_position = path[0]
-                    action = get_action(obs['position'], next_position)
-                else:
-                    action = constants.Action.Stop
 
         print(action)
 
