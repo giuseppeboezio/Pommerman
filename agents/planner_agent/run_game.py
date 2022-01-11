@@ -7,7 +7,7 @@ def main():
 
     my_agent = PlannerAgent()
     config = 'PommeFFACompetition-v0'
-    agent_list = [my_agent, agents.SimpleAgent(), agents.RandomAgent(), agents.RandomAgent()]
+    agent_list = [my_agent, agents.SimpleAgent(), agents.SimpleAgent(), agents.SimpleAgent()]
     game_state_file = None
 
     # Make the "Free-For-All" environment using the agent list

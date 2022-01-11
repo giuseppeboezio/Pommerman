@@ -25,7 +25,8 @@ def get_dangerous_positions(board, blast_strength, position):
             remove_list = [pos for pos in left if pos[1] < elem[1]]
             # removing positions beyond the rigid wall because they cannot be reached by the flames
             for item in remove_list:
-                acceptable_pos.remove(item)
+                if item in acceptable_pos:
+                    acceptable_pos.remove(item)
     # right direction
     right = [pos for pos in acceptable_pos if pos[1] > position[1]]
     for elem in right:
@@ -34,7 +35,8 @@ def get_dangerous_positions(board, blast_strength, position):
             remove_list = [pos for pos in right if pos[1] > elem[1]]
             # removing positions beyond the rigid wall because they cannot be reached by the flames
             for item in remove_list:
-                acceptable_pos.remove(item)
+                if item in acceptable_pos:
+                    acceptable_pos.remove(item)
     # up direction
     up = [pos for pos in acceptable_pos if pos[0] < position[0]]
     for elem in up:
@@ -43,7 +45,8 @@ def get_dangerous_positions(board, blast_strength, position):
             remove_list = [pos for pos in up if pos[0] < elem[0]]
             # removing positions beyond the rigid wall because they cannot be reached by the flames
             for item in remove_list:
-                acceptable_pos.remove(item)
+                if item in acceptable_pos:
+                    acceptable_pos.remove(item)
     # down direction
     down = [pos for pos in acceptable_pos if pos[0] > position[0]]
     for elem in down:
@@ -52,7 +55,8 @@ def get_dangerous_positions(board, blast_strength, position):
             remove_list = [pos for pos in down if pos[0] > elem[0]]
             # removing positions beyond the rigid wall because they cannot be reached by the flames
             for item in remove_list:
-                acceptable_pos.remove(item)
+                if item in acceptable_pos:
+                    acceptable_pos.remove(item)
     # adding positions to the main list
     dang_pos = acceptable_pos
 
