@@ -170,8 +170,11 @@ class PlannerAgent(BaseAgent):
                     # use Dijkstra's algorithm to find distances and keep the closest position
                     distances, nodes = get_distances(new_obs)
                     self.target_pos = tg_two.get_target_pos(distances, obs['position'])
-                    # generate the path to follow to reach that position
-                    self.defined = True
+                    # there is not a safe position for the agent (because in our strategy it must move)
+                    if self.target_pos[0] == obs['position'][0] and self.target_pos[1] == obs['position'][1]:
+                        return constants.Action.Stop
+                    else:
+                        self.defined = True
 
                 # update the path
                 distances, nodes = get_distances(obs)

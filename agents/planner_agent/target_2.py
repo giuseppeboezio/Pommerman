@@ -24,8 +24,7 @@ def get_target_pos(distances, curr_position):
     dis_without_curr_pos = np.array(distances)
     # the agent is forced to move to reveal on the board the bomb it has just placed
     dis_without_curr_pos[curr_position[0], curr_position[1]] = np.inf
-    # position = (curr_position[0],curr_position[1])
-    position = (-1, -1)
+    position = (curr_position[0],curr_position[1])
     value = np.inf
     for i in range(constants.BOARD_SIZE):
         for j in range(constants.BOARD_SIZE):
