@@ -96,6 +96,18 @@ def is_path_safe(path, explosion_fields):
     return safe
 
 
+def get_immediate_expl_pos(explosion_fields):
+    """Return the positions affected by bombs in the next timestep"""
+    positions = []
+    for i in range(len(explosion_fields)):
+        life = explosion_fields[i].get_life()
+        if life == 1.0:
+            dang_pos = explosion_fields[i].get_dang_pos()
+            positions.append(dang_pos)
+    positions = set(positions)
+    return positions
+
+
 class Target(Enum):
     """Target of the agent"""
 
@@ -198,10 +210,24 @@ class PlannerAgent(BaseAgent):
 
                 else:
                     # if the agent does not have ammo, it tries to find a safe position
+                    self.defined = False
+                    self.target_pos = None
                     self.target = Target.Safe.value
 
             # looking for a safe position
             elif self.target == Target.Safe.value:
+
+                # take into account positions where the agent could be killed in case the bomb explodes at this timestep
+                expl_fields = tg_two.get_positions(obs)
+                dangerous_pos = get_immediate_expl_pos(expl_fields)
+                # exclude the position of the agent from the dangerous position
+                if obs['position'] in dangerous_pos:
+                    dangerous_pos.remove(obs['position'])
+                # create a board which takes into account possible dangerous positions
+                new_board = change_board(obs['board'], dangerous_pos, Item.Rigid.value)
+                new_obs = copy.copy(obs)
+                new_obs['board'] = new_board
+
                 if not self.defined:
 
                     # use Dijkstra's algorithm to find distances and keep the closest position
@@ -214,7 +240,7 @@ class PlannerAgent(BaseAgent):
                         self.defined = True
 
                 # update the path
-                distances, nodes = get_distances(obs)
+                distances, nodes = get_distances(new_obs)
                 path = generate_path(nodes, self.target_pos)
                 # at each step I check whether there is a path to reach the position or not
                 if len(path) > 0:
