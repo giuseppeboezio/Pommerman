@@ -5,16 +5,18 @@ from utility import get_dangerous_positions
 
 
 def get_positions(obs):
+    """Positions affected by the bomb according to its blast strength"""
 
-    dang_pos = []
+    dang_pos = []  # it is a list of ExplosionField objects
     # collecting positions where there are bombs and positions affected by the blast strength
     for i in range(constants.BOARD_SIZE):
         for j in range(constants.BOARD_SIZE):
-            if obs['bomb_life'][i,j] == 1.0:
+            if obs['board'] == Item.Bomb.value:
                 position = (i,j)
                 blast_strength = int(obs['bomb_blast_strength'][position[0],position[1]] - 1)
                 board = obs['board']
-                dang_pos = dang_pos + get_dangerous_positions(board, blast_strength, position)
+                life = obs['bomb_life'][position[0], position[1]]
+                dang_pos.append(get_dangerous_positions(board, blast_strength, life, position))
 
     return dang_pos
 

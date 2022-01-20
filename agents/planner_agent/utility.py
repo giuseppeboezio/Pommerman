@@ -3,7 +3,28 @@ from pommerman.constants import Item
 import colorama
 
 
-def get_dangerous_positions(board, blast_strength, position):
+class ExplosionField:
+
+    def __init__(self, position, life):
+        super(ExplosionField, self).__init__()
+        self.position = position
+        self.life = life
+        self.field = []
+
+    def get_position(self):
+        return self.position
+
+    def get_life(self):
+        return self.life
+
+    def set_danger_pos(self, positions):
+        self.field = list(positions)
+
+    def get_dang_pos(self):
+        return self.field
+
+
+def get_dangerous_positions(board, blast_strength, life, position):
     # positions affected by the blast strength
     left = [(position[0], position[1] - j) for j in range(1, blast_strength + 1)]
     right = [(position[0], position[1] + j) for j in range(1, blast_strength + 1)]
@@ -60,7 +81,10 @@ def get_dangerous_positions(board, blast_strength, position):
     # adding positions to the main list
     dang_pos = acceptable_pos
 
-    return dang_pos
+    explosion_field = ExplosionField(position, life)
+    explosion_field.set_danger_pos(dang_pos)
+
+    return explosion_field
 
 
 def color_sign(x):

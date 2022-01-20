@@ -12,7 +12,7 @@ from utility import show_board
 
 
 def generate_path(nodes, target_pos):
-    """Provide the path to follow to reach the position"""
+    """Provide the path (list of positions) to follow to reach the position"""
 
     path = []
 
@@ -73,6 +73,29 @@ def change_board(board, positions, value):
     return new_board
 
 
+def is_path_safe(path, explosion_fields):
+    """Return true whether the number of steps of the path is less than the minimum life
+    of the bombs whose affected positions are in the path, false otherwise"""
+
+    # list of explosion field objects which affect the path
+    path_set = set(path)
+    obj_list = []
+    for i in range(len(explosion_fields)):
+        affected_pos = set(explosion_fields[i].get_dang_pos())
+        common_pos = path_set.intersection(affected_pos)
+        # check whether there are some positions affected by the bomb
+        if len(common_pos) > 0:
+            obj_list.append(explosion_fields[i])
+    # finding the bomb with the minimum life
+    lives = np.array([e.get_life() for e in explosion_fields])
+    life = np.min(lives)
+    # decide whether the path is safe
+    safe = False
+    if life > len(path):
+        safe = True
+    return safe
+
+
 class Target(Enum):
     """Target of the agent"""
 
@@ -110,6 +133,7 @@ class PlannerAgent(BaseAgent):
             print(show_board(obs['board']))
 
             # avoid positions where the bomb could explode
+            '''
             dangerous_pos = tg_two.get_positions(obs)
             dangerous_pos = set(dangerous_pos)
             # exclude the position of the agent from the dangerous position
@@ -119,6 +143,7 @@ class PlannerAgent(BaseAgent):
             new_board = change_board(obs['board'], dangerous_pos, Item.Rigid.value)
             new_obs = copy.copy(obs)
             new_obs['board'] = new_board
+            '''
 
             # the objective is putting a bomb
             if self.target == Target.Bomb.value:
@@ -129,7 +154,7 @@ class PlannerAgent(BaseAgent):
                     if not self.defined:
 
                         # use Dijkstra's algorithm to find distances
-                        distances, nodes = get_distances(new_obs)
+                        distances, nodes = get_distances(obs)
                         # obtaining position where it could be possible to put a bomb
                         positions = tg_one.get_positions(nodes)
                         # counting number of destroyed walls for each position
@@ -137,13 +162,25 @@ class PlannerAgent(BaseAgent):
                         self.defined = True
 
                     # use Dijkstra's algorithm to find distances
-                    distances, nodes = get_distances(new_obs)
+                    distances, nodes = get_distances(obs)
                     path = generate_path(nodes, self.target_pos)
                     # at each step I check whether there is a path to reach the position or not
-                    if len(path) > 0:
-                        next_position = path[0]
-                        action = get_action(obs['position'], next_position)
-                        corrective_strategy = False
+                    num_steps = len(path)
+                    if num_steps > 0:
+                        # general concept: the bomb is dangerous only if it affects agent path
+                        # and if it explodes before the agent reaches the target position
+                        # obtaining positions of bomb and related explosion field
+                        dangerous_pos = tg_two.get_positions(obs)
+                        safe = is_path_safe(path, dangerous_pos)
+                        if safe:
+                            next_position = path[0]
+                            action = get_action(obs['position'], next_position)
+                            corrective_strategy = False
+                        else:
+                            # in case the path is not safe the agent moves toward a safe position
+                            self.defined = False
+                            self.target_pos = None
+                            self.target = Target.Safe.value
 
                     else:
                         # the current position of the agent is the target position
