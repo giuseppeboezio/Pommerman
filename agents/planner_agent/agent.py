@@ -86,13 +86,17 @@ def is_path_safe(path, explosion_fields):
         # check whether there are some positions affected by the bomb
         if len(common_pos) > 0:
             obj_list.append(explosion_fields[i])
-    # finding the bomb with the minimum life
-    lives = np.array([e.get_life() for e in explosion_fields])
-    life = np.min(lives)
-    # decide whether the path is safe
-    safe = False
-    if life > len(path):
+    # check whether there are bombs affecting the path
+    if len(obj_list) == 0:
         safe = True
+    else:
+        lives = np.array([e.get_life() for e in explosion_fields])
+        life = np.min(lives)
+        # decide whether the path is safe
+        if life > len(path):
+            safe = True
+        else:
+            safe = False
     return safe
 
 
@@ -103,7 +107,7 @@ def get_immediate_expl_pos(explosion_fields):
         life = explosion_fields[i].get_life()
         if life == 1.0:
             dang_pos = explosion_fields[i].get_dang_pos()
-            positions.append(dang_pos)
+            positions += dang_pos
     positions = set(positions)
     return positions
 
@@ -218,7 +222,7 @@ class PlannerAgent(BaseAgent):
 
                     # use Dijkstra's algorithm to find distances and keep the closest position
                     distances, nodes = get_distances(new_obs)
-                    self.target_pos = tg_two.get_target_pos(distances, obs['position'])
+                    self.target_pos = tg_two.get_target_pos(distances, new_obs['position'], new_obs['board'])
                     # there is not a safe position for the agent (because in our strategy it must move)
                     if self.target_pos[0] == obs['position'][0] and self.target_pos[1] == obs['position'][1]:
                         return constants.Action.Stop
@@ -250,10 +254,11 @@ class PlannerAgent(BaseAgent):
                     # check whether there is at least a power-up to pick
                     if len(pow_up_pos) > 0:
                         # change the board allowing to reach power-ups
+                        new_obs = obs.copy()
                         new_board = change_board(obs['board'], pow_up_pos, Item.Passage.value)
-                        obs['board'] = new_board
+                        new_obs['board'] = new_board
                         # execute Dijkstra's algorithm to get distances
-                        distances, nodes = get_distances(obs)
+                        distances, nodes = get_distances(new_obs)
                         self.target_pos = tg_three.get_target_collect(distances, set(pow_up_pos))
                         # check whether a target has been found
                         if self.target_pos is None:

@@ -24,7 +24,7 @@ class ExplosionField:
         return self.field
 
 
-def get_dangerous_positions(board, blast_strength, life, position):
+def get_dangerous_positions(board, blast_strength, position):
     # positions affected by the blast strength
     left = [(position[0], position[1] - j) for j in range(1, blast_strength + 1)]
     right = [(position[0], position[1] + j) for j in range(1, blast_strength + 1)]
@@ -81,10 +81,7 @@ def get_dangerous_positions(board, blast_strength, life, position):
     # adding positions to the main list
     dang_pos = acceptable_pos
 
-    explosion_field = ExplosionField(position, life)
-    explosion_field.set_danger_pos(dang_pos)
-
-    return explosion_field
+    return dang_pos
 
 
 def color_sign(x):
