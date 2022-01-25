@@ -100,6 +100,19 @@ def is_path_safe(path, explosion_fields):
     return safe
 
 
+def is_pos_safe(target, dang_pos):
+    """Return true whether there aren't bombs which could kill the agent in the target position, false otherwise"""
+    dang_pos_list = []
+    for i in range(len(dang_pos)):
+        dang_pos_list += dang_pos[i].get_dang_pos()
+    dang_pos_list = set(dang_pos_list)
+    if target in dang_pos_list:
+        safe = False
+    else:
+        safe = True
+    return safe
+
+
 def get_immediate_expl_pos(explosion_fields):
     """Return the positions affected by bombs in the next timestep"""
     positions = []
@@ -151,42 +164,42 @@ class PlannerAgent(BaseAgent):
             # the objective is putting a bomb
             if self.target == Target.Bomb.value:
 
-                # it makes sense to place bomb whether if the agent has enough ammo
-                if obs['ammo'] > 0:
-                    # the objective is finding the position where to put the bomb avoiding to be killed by a bomb
-                    if not self.defined:
-
-                        # use Dijkstra's algorithm to find distances
-                        distances, nodes = get_distances(obs)
-                        # obtaining position where it could be possible to put a bomb
-                        positions = tg_one.get_positions(nodes)
-                        # counting number of destroyed walls for each position
-                        self.target_pos = tg_one.get_target_position(obs, positions)
-                        self.defined = True
+                # places the bomb even if the agents does not have ammo waiting for an explosion
+                if not self.defined:
 
                     # use Dijkstra's algorithm to find distances
                     distances, nodes = get_distances(obs)
-                    path = generate_path(nodes, self.target_pos)
-                    # at each step I check whether there is a path to reach the position or not
-                    if len(path) > 0:
-                        # general concept: the bomb is dangerous only if it affects agent path
-                        # and if it explodes before the agent reaches the target position
-                        # obtaining positions of bomb and related explosion field
-                        dangerous_pos = tg_two.get_positions(obs)
-                        safe = is_path_safe(path, dangerous_pos)
-                        if safe:
-                            next_position = path[0]
-                            action = get_action(obs['position'], next_position)
-                            corrective_strategy = False
-                        else:
-                            # in case the path is not safe the agent moves toward a safe position
-                            self.defined = False
-                            self.target_pos = None
-                            self.target = Target.Safe.value
+                    # obtaining position where it could be possible to put a bomb
+                    positions = tg_one.get_positions(nodes)
+                    # counting number of destroyed walls for each position
+                    self.target_pos = tg_one.get_target_position(obs, positions)
+                    self.defined = True
 
+                # use Dijkstra's algorithm to find distances
+                distances, nodes = get_distances(obs)
+                path = generate_path(nodes, self.target_pos)
+                # at each step I check whether there is a path to reach the position or not
+                if len(path) > 0:
+                    # general concept: the bomb is dangerous only if it affects agent path
+                    # and if it explodes before the agent reaches the target position
+                    # obtaining positions of bomb and related explosion field
+                    dangerous_pos = tg_two.get_positions(obs)
+                    safe = is_path_safe(path, dangerous_pos)
+                    if safe:
+                        next_position = path[0]
+                        action = get_action(obs['position'], next_position)
+                        corrective_strategy = False
                     else:
-                        # the current position of the agent is the target position
-                        if obs['position'][0] == self.target_pos[0] and obs['position'][1] == self.target_pos[1]:
+                        # in case the path is not safe the agent moves toward a safe position
+                        self.defined = False
+                        self.target_pos = None
+                        self.target = Target.Safe.value
+
+                else:
+                    # the current position of the agent is the target position
+                    if obs['position'][0] == self.target_pos[0] and obs['position'][1] == self.target_pos[1]:
+                        # check whether the agent has enough ammo
+                        if obs['ammo'] > 0:
                             # the action must be passed as a value
                             action = constants.Action.Bomb.value
                             self.defined = False
@@ -194,15 +207,19 @@ class PlannerAgent(BaseAgent):
                             self.target = Target.Safe.value
                             corrective_strategy = False
                         else:
-                            # case in which it is no more possible to reach the target
-                            self.defined = False
-                            self.target = Target.Safe.value
-
-                else:
-                    # if the agent does not have ammo, it tries to find a safe position
-                    self.defined = False
-                    self.target_pos = None
-                    self.target = Target.Safe.value
+                            # the agent must wait until it has again an ammo if the position is safe, move otherwise
+                            dangerous_pos = tg_two.get_positions(obs)
+                            safe_pos = is_pos_safe(self.target_pos, dangerous_pos)
+                            if safe_pos:
+                                action = constants.Action.Stop
+                            else:
+                                self.target = Target.Safe.value
+                                self.defined = False
+                                self.target_pos = None
+                    else:
+                        # case in which it is no more possible to reach the target
+                        self.defined = False
+                        self.target = Target.Safe.value
 
             # looking for a safe position
             elif self.target == Target.Safe.value:
