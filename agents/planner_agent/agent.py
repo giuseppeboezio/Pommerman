@@ -104,7 +104,9 @@ def is_pos_safe(target, dang_pos):
     """Return true whether there aren't bombs which could kill the agent in the target position, false otherwise"""
     dang_pos_list = []
     for i in range(len(dang_pos)):
-        dang_pos_list += dang_pos[i].get_dang_pos()
+        # consider only immediate threaten
+        if dang_pos[i].get_life() == 1.0:
+            dang_pos_list += dang_pos[i].get_dang_pos()
     dang_pos_list = set(dang_pos_list)
     if target in dang_pos_list:
         safe = False
@@ -212,6 +214,7 @@ class PlannerAgent(BaseAgent):
                             safe_pos = is_pos_safe(self.target_pos, dangerous_pos)
                             if safe_pos:
                                 action = constants.Action.Stop
+                                corrective_strategy = False
                             else:
                                 self.target = Target.Safe.value
                                 self.defined = False
