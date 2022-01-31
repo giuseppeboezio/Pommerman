@@ -7,8 +7,19 @@ import numpy as np
 import target_1 as tg_one
 import target_2 as tg_two
 import target_3 as tg_three
+import target_4 as tg_four
 import copy
 from utility import show_board
+
+
+def count_num_item(board, set_items):
+    # count number of cells containing certain kind of items in set_items
+    count = 0
+    for i in range(constants.BOARD_SIZE):
+        for j in range(constants.BOARD_SIZE):
+            if board[i,j] in set_items:
+                count += 1
+    return count
 
 
 def generate_path(nodes, target_pos):
@@ -146,8 +157,21 @@ class PlannerAgent(BaseAgent):
         self.target = Target.Bomb.value  # target to achieve
         self.defined = False  # flag to establish if the target position has been found or not
         self.target_pos = None  # Target position to reach
+        self.num_walls = 0  # Number of wooden walls
+        self.num_pow_up = 0  # Number of found power-ups
+        self.obs_board = None  # Observation to use for power-ups counting
 
     def act(self, obs, action_space):
+
+        # counting procedure to understand when to switch to target 4
+        if self.num_walls == 0:
+            list_items = [Item.Wood.value]
+            self.num_walls = count_num_item(obs['board'], set(list_items))
+            self.obs_board = np.array(obs['board'])
+            self.num_pow_up += tg_four.count_power_ups(np.zeros((constants.BOARD_SIZE, constants.BOARD_SIZE)), self.obs_board)
+        else:
+            self.num_pow_up += tg_four.count_power_ups(self.obs_board, obs['board'])
+            self.obs_board = np.array(obs['board'])
 
         action = None
         corrective_strategy = True
@@ -158,6 +182,8 @@ class PlannerAgent(BaseAgent):
             # print for debugging
             print("Information")
             print("-----------")
+            print(f"Number of wooden walls: {self.num_walls}")
+            print(f"Number of power-ups: {self.num_pow_up}")
             print(f"Target : {self.target}")
             print(f"Target position: {self.target_pos}")
             print("Board")
