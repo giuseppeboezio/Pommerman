@@ -1,7 +1,15 @@
-from agent import KickDirection
 from pommerman.constants import Item
 from pommerman import constants
 import numpy as np
+from enum import Enum
+
+
+# TODO check dependency problem
+class KickDirection(Enum):
+    Left = 0
+    Right = 1
+    Up = 2
+    Down = 3
 
 
 def count_power_ups(board1, board2):
@@ -69,10 +77,14 @@ def get_admissible_pos(ag_pos, board):
         i += 1
 
     # remove last positions in all directions due to the needed space to kick the bomb
-    left.pop()
-    right.pop()
-    up.pop()
-    down.pop()
+    if len(left) > 0:
+        left.pop()
+    if len(right) > 0:
+        right.pop()
+    if len(up) > 0:
+        up.pop()
+    if len(down) > 0:
+        down.pop()
 
     positions = left + right + up + down
     return positions

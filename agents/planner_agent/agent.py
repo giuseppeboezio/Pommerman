@@ -410,8 +410,13 @@ class PlannerAgent(BaseAgent):
                         self.killer_mode = KickStep.Safe.value
                     else:
                         positions = tg_four.get_admissible_pos(opp, obs['board'])
-                        self.target_pos, self.kick_direction = tg_four.get_target_pos(distances, opp, positions)
-                        self.killer_mode = KickStep.Bomb.value
+                        # there could be some cases where it is possible to reach the agent
+                        # but not to place a bomb for kicking it
+                        if len(positions) > 0:
+                            self.target_pos, self.kick_direction = tg_four.get_target_pos(distances, opp, positions)
+                            self.killer_mode = KickStep.Bomb.value
+                        else:
+                            self.killer_mode = KickStep.Safe.value
 
                 # the agent must reach the position where to place a bomb
                 if self.killer_mode == KickStep.Bomb.value:
@@ -486,7 +491,8 @@ class PlannerAgent(BaseAgent):
                     else:
                         action = constants.Action.Up
                     corrective_strategy = False
-                    # TODO what to do after kicking the bomb
+                    # naive imoplementation - repeat the strategy
+                    self.killer_mode = KickStep.TargetDef.value
 
                 # safe position
                 if self.killer_mode == KickStep.Safe.value:
