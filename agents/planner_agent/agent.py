@@ -392,6 +392,13 @@ class PlannerAgent(BaseAgent):
             corrective_strategy = True
 
             while corrective_strategy:
+
+                # print to understand agent's behaviour
+                print(f"Target : {self.killer_mode}")
+                print(f"Target position: {self.target_pos}")
+                print("Board")
+                print(show_board(obs['board']))
+
                 # target where to place a bomb must be defined
                 if self.killer_mode == KickStep.TargetDef.value:
                     # opponents' positions
@@ -413,10 +420,12 @@ class PlannerAgent(BaseAgent):
                         # there could be some cases where it is possible to reach the agent
                         # but not to place a bomb for kicking it
                         if len(positions) > 0:
+                            distances, nodes = get_distances(obs)
                             self.target_pos, self.kick_direction = tg_four.get_target_pos(distances, opp, positions)
                             self.killer_mode = KickStep.Bomb.value
                         else:
                             self.killer_mode = KickStep.Safe.value
+                            self.defined = False
 
                 # the agent must reach the position where to place a bomb
                 if self.killer_mode == KickStep.Bomb.value:
@@ -450,7 +459,7 @@ class PlannerAgent(BaseAgent):
                                 self.defined = False
                                 self.target_pos = None
                                 self.killer_mode = KickStep.SingleStep.value
-                                corrective_strategy = False
+                                return action
                             else:
                                 # the agent must wait until it has again an ammo if the position is safe, move otherwise
                                 dangerous_pos = tg_two.get_positions(obs)
@@ -477,8 +486,9 @@ class PlannerAgent(BaseAgent):
                         action = constants.Action.Up
                     else:
                         action = constants.Action.Down
-                    corrective_strategy = False
+
                     self.killer_mode = KickStep.Kick.value
+                    return action
 
                 # kick the bomb
                 if self.killer_mode == KickStep.Kick.value:
@@ -490,9 +500,10 @@ class PlannerAgent(BaseAgent):
                         action = constants.Action.Down
                     else:
                         action = constants.Action.Up
-                    corrective_strategy = False
+
                     # naive imoplementation - repeat the strategy
                     self.killer_mode = KickStep.TargetDef.value
+                    return action
 
                 # safe position
                 if self.killer_mode == KickStep.Safe.value:
