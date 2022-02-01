@@ -506,6 +506,7 @@ class PlannerAgent(BaseAgent):
                     if self.num_kicks == 0:
                         self.target = tg_four.get_close_target(obs['position'], obs['board'], self.kick_direction)
                         self.killer_mode = KickStep.Bomb.value
+                        self.num_kicks += 1
                     else:
                         self.killer_mode = KickStep.TargetDef.value
                     return action

@@ -112,5 +112,31 @@ def get_target_pos(dis_board, agent_pos, positions):
 
 def get_close_target(position, board, direction):
     """Return next target position where to place a bomb to place a sequence of bombs"""
-
-
+    # positions which could be used for the strategy
+    positions = []
+    # check the direction
+    if direction == KickDirection.Left.value or direction == KickDirection.Right.value:
+        positions = [(position[0] - 1, position[1]), (position[0] + 1, position[1])]
+    else:
+        positions = [(position[0], position[1] - 1), (position[0], position[1] + 1)]
+    # remove invalid positions (outside the board, no passages)
+    positions = [(i,j) for (i,j) in positions if 0 <= i < constants.BOARD_SIZE and 0 <= j < constants.BOARD_SIZE]
+    positions = [(i,j) for (i,j) in positions if board[i,j] == Item.Passage.value]
+    # there aren't admissible positions
+    if len(positions) == 0:
+        return None
+    else:
+        # according to the direction check whether there is at least one position where it is possible to kick the bomb
+        for pos in positions:
+            if direction == KickDirection.Left.value or direction == KickDirection.Right.value:
+                neighbours = [(pos[0], pos[1] - 1), (pos[0], pos[1] + 1)]
+            else:
+                neighbours = [(pos[0] - 1, pos[1]), (pos[0] + 1, pos[1])]
+            # check whether it is a valid position where to place a bomb
+            neighbours = [(i,j) for (i,j) in neighbours if 0 <= i < constants.BOARD_SIZE and 0 <= j < constants.BOARD_SIZE]
+            neighbours = [(i,j) for (i,j) in neighbours if board[i,j] == Item.Passage.value]
+            if len(neighbours) == 2:
+                return pos
+            else:
+                continue
+        return None
