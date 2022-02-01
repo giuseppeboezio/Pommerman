@@ -188,6 +188,7 @@ class PlannerAgent(BaseAgent):
         self.obs_board = None  # Observation to use for power-ups counting
         self.killer_mode = KickStep.TargetDef.value  # flag to enable kicking bomb strategy
         self.kick_direction = None  # Direction to kick the bomb
+        self.num_kicks = 0  # Number of kicks to kick sequence of bombs in the same direction
 
     def act(self, obs, action_space):
 
@@ -501,8 +502,12 @@ class PlannerAgent(BaseAgent):
                     else:
                         action = constants.Action.Up
 
-                    # naive imoplementation - repeat the strategy
-                    self.killer_mode = KickStep.TargetDef.value
+                    # check number of kicks
+                    if self.num_kicks == 0:
+                        self.target = tg_four.get_close_target(obs['position'], obs['board'], self.kick_direction)
+                        self.killer_mode = KickStep.Bomb.value
+                    else:
+                        self.killer_mode = KickStep.TargetDef.value
                     return action
 
                 # safe position

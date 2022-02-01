@@ -109,3 +109,8 @@ def get_target_pos(dis_board, agent_pos, positions):
 
     return target_pos, direction
 
+
+def get_close_target(position, board, direction):
+    """Return next target position where to place a bomb to place a sequence of bombs"""
+
+
